@@ -34,6 +34,7 @@ class LookaheadAudioSinkTest {
 
     @Before
     fun setup() {
+        OutputGuard.reset()
         mockkStatic(Log::class)
         every { Log.i(any(), any()) } returns 0
         CarDsp.updateRoute(listOf(speaker))
@@ -56,6 +57,7 @@ class LookaheadAudioSinkTest {
 
     @After
     fun teardown() {
+        OutputGuard.reset()
         CarDsp.target = null
         CarDsp.updateRoute(listOf(speaker))
         unmockkStatic(Log::class)
@@ -187,6 +189,43 @@ class LookaheadAudioSinkTest {
         sink.handleBuffer(pcm16(1000, -1000), 0, 1)
         assertArrayEquals(packed(3, 128000, -128000), bytes.toByteArray())
         assertFalse(sink.hasPendingData())
+    }
+
+    @Test
+    fun replayGainProtectionLimitsWithoutEqAndDrainsEveryFrame() {
+        sink = LookaheadAudioSink(delegate, peakProtection = { true }, levelingGain = { 2.0 })
+        configure(C.ENCODING_PCM_FLOAT)
+        val input = DoubleArray(2400) { 0.75 }
+        sink.handleBuffer(samples(C.ENCODING_PCM_FLOAT, input), 0, 1)
+        assertTrue(sink.hasPendingData())
+        sink.playToEndOfStream()
+        assertEquals(input.size * 3, bytes.size())
+        val reference = TruePeakLimiter(48000, 1)
+        val frame = DoubleArray(1)
+        val expectedCodes = mutableListOf<Int>()
+        for (value in input) {
+            if (reference.process(doubleArrayOf(value * 2), frame)) {
+                expectedCodes += (frame[0] * 8388608).roundToInt()
+            }
+        }
+        while (reference.drain(frame)) expectedCodes += (frame[0] * 8388608).roundToInt()
+        assertArrayEquals(packed(3, *expectedCodes.toIntArray()), bytes.toByteArray())
+        assertTrue(OutputGuard.state.value.limitedAtMs > 0)
+        assertFalse(OutputGuard.state.value.clippedAtMs > 0)
+    }
+
+    @Test
+    fun turningProtectionOffPreservesLaterBypassSamples() {
+        var protect = true
+        sink = LookaheadAudioSink(delegate, peakProtection = { protect })
+        configure(C.ENCODING_PCM_24BIT)
+        sink.handleBuffer(samples(C.ENCODING_PCM_24BIT, DoubleArray(1000) { 0.95 }), 0, 1)
+        protect = false
+        val tail = packed(3, -8388608, -1, 0, 1, 8388607)
+        sink.handleBuffer(ByteBuffer.wrap(tail), 21000, 1)
+        sink.playToEndOfStream()
+        assertEquals(1005 * 3, bytes.size())
+        assertArrayEquals(tail, bytes.toByteArray().takeLast(tail.size).toByteArray())
     }
 
     @Test

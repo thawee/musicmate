@@ -43,7 +43,7 @@ class PlaybackTuningUiTest {
                 }
             }
         }
-        val chip = compose.onNodeWithContentDescription("Audio tuning").assertIsDisplayed()
+        val chip = compose.onNodeWithContentDescription("MateTune").assertIsDisplayed()
         val label = compose.onNode(SemanticsMatcher("compact mode and status label") { node ->
             node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.any {
                 it.text.matches(Regex("^(Neutral|Warm|Vocal|Lively|Custom) · (On|Bypassed|Unavailable)$"))
@@ -64,7 +64,7 @@ class PlaybackTuningUiTest {
             .executeShellCommand("screencap -p /sdcard/Download/dsp-playback-$name.png")
         ParcelFileDescriptor.AutoCloseInputStream(screenshot).use { it.readBytes() }
         chip.performClick()
-        compose.onNodeWithText("Quick tuning").assertIsDisplayed()
+        compose.onNodeWithText("MateTune · Quick").assertIsDisplayed()
         if (renderer != null) {
             compose.onNodeWithText("Playing on $renderer. Tuning applies only when Music Mate plays on this phone.").assertIsDisplayed()
             InstrumentationRegistry.getInstrumentation().uiAutomation

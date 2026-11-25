@@ -17,6 +17,7 @@ import kotlin.math.roundToLong
 /** Owns the DSP delay above AudioTrack, where end-of-stream and decoder format changes are visible. */
 class LookaheadAudioSink(
     private val delegate: AudioSink,
+    private val peakProtection: () -> Boolean = { false },
     private val levelingGain: () -> Double = { 1.0 }
 ) : ForwardingAudioSink(delegate) {
     private var configuration: AudioSink.AudioSinkConfig? = null
@@ -89,7 +90,7 @@ class LookaheadAudioSink(
         require(buffer.remaining() % (sourceWidth * channels) == 0) { "PCM buffer must contain whole frames" }
         if (baseTimeUs == null) baseTimeUs = presentationTimeUs
         dsp.beginBlock(levelingGain())
-        val active = dsp.isDspActive
+        val active = dsp.isDspActive || peakProtection()
         delayed = delayed || active
         val target = conversionBuffer(buffer.remaining() / sourceWidth * outputWidth())
         val source = buffer.duplicate().order(ByteOrder.LITTLE_ENDIAN)

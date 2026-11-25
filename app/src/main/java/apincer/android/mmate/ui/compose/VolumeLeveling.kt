@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.preference.PreferenceManager
 import apincer.android.mmate.R
+import apincer.android.mmate.audio.OutputGuard
 import apincer.music.core.Constants
 import apincer.music.core.Settings
 import apincer.music.core.playback.ReplayGainManager
@@ -41,6 +43,7 @@ private val LEVELING_KEYS = setOf(
     Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING,
     Constants.PREF_REPLAYGAIN_TARGET,
     Constants.PREF_REPLAYGAIN_TAGS_CHANGED,
+    Constants.PREF_REPLAYGAIN_UNTAGGED_POLICY,
 )
 
 internal val LEVELING_MODES = listOf("off", "track", "album")
@@ -115,6 +118,8 @@ internal fun VolumeLevelingControl(
     var mode by remember { mutableStateOf(Settings.getReplayGainMode(context).lowercase(Locale.ROOT)) }
     var preamp by remember { mutableStateOf(Settings.getReplayGainPreamp(context)) }
     val status = levelingStatus(rememberLeveling(trackPath), remoteTarget)
+    val guard = outputGuardLight(local = remoteTarget == null)
+    val guardState by OutputGuard.state.collectAsState()
     val modeLabels = mapOf(
         "off" to stringResource(R.string.leveling_mode_off),
         "track" to stringResource(R.string.leveling_mode_track),
@@ -156,6 +161,11 @@ internal fun VolumeLevelingControl(
             status != null && mode != "off" -> Text(stringResource(R.string.leveling_now_playing, status.text),
                 color = status.color, fontSize = 13.sp,
                 modifier = Modifier.semantics { contentDescription = status.description })
+        }
+        if (guard != null) {
+            Text(stringResource(if (guard == GuardLight.CLIPPING) R.string.leveling_output_clipping
+                else R.string.leveling_output_limiting, guardState.reductionDb),
+                color = guard.color, fontSize = 13.sp)
         }
     }
 }

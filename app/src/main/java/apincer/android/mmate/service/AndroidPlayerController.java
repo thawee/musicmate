@@ -24,6 +24,7 @@ import java.util.List;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.ExternalAndroidPlayer;
 import apincer.music.core.playback.ReplayGainManager;
+import apincer.music.core.Settings;
 import apincer.music.core.model.Track;
 import apincer.music.core.playback.spi.PlaybackCallback;
 import apincer.music.core.provider.MusicFileProvider;
@@ -71,11 +72,13 @@ public class AndroidPlayerController {
     private Track nextTrack;
     /** Leveling gain of the stream being output; the PCM output applies it, so the AudioTrack stays at unity. */
     private final StreamGain streamGain = new StreamGain();
+    private volatile boolean replayGainPeakProtection;
     // A field, because SharedPreferences holds its listeners weakly
     private final SharedPreferences.OnSharedPreferenceChangeListener levelingListener = (prefs, key) -> {
         if (Constants.PREF_REPLAYGAIN_MODE.equals(key) || Constants.PREF_REPLAYGAIN_PREAMP.equals(key)
                 || Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING.equals(key)
                 || Constants.PREF_REPLAYGAIN_TARGET.equals(key)
+                || Constants.PREF_REPLAYGAIN_UNTAGGED_POLICY.equals(key)
                 || Constants.PREF_REPLAYGAIN_TAGS_CHANGED.equals(key)) {
             runOnMainThread(this::relevel);
         }
@@ -194,6 +197,7 @@ public class AndroidPlayerController {
         });
         this.mediaRouteLog.start();
         PreferenceManager.getDefaultSharedPreferences(context).registerOnSharedPreferenceChangeListener(levelingListener);
+        updatePeakProtection();
         
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -222,7 +226,7 @@ public class AndroidPlayerController {
                             .setEnableAudioTrackPlaybackParams(true)
                             .setAudioOutputProvider(outputProvider)
                             .build();
-                    return new LookaheadAudioSink(sink, streamGain::getCurrent);
+                    return new LookaheadAudioSink(sink, () -> replayGainPeakProtection, streamGain::getCurrent);
                 }
 
                 @Override
@@ -758,11 +762,17 @@ public class AndroidPlayerController {
 
     /** Recomputes the queued tracks' leveling after a settings or tag change. */
     private void relevel() {
+        updatePeakProtection();
         if (internalExoPlayer == null) return;
         for (int i = 0; i < internalExoPlayer.getMediaItemCount(); i++) {
             MediaItem.LocalConfiguration local = internalExoPlayer.getMediaItemAt(i).localConfiguration;
             if (local != null && local.tag instanceof TrackGain gain) gain.setGain(levelingGain(gain.getPath()));
         }
         streamGain.refresh();
+    }
+
+    private void updatePeakProtection() {
+        replayGainPeakProtection = !"off".equalsIgnoreCase(Settings.getReplayGainMode(context))
+                && Settings.isReplayGainPreventClipping(context);
     }
 }

@@ -44,6 +44,9 @@ class SettingsActivity : ComponentActivity() {
             var replayGainPreventClipping by remember {
                 mutableStateOf(Settings.isReplayGainPreventClipping(this@SettingsActivity))
             }
+            var replayGainUntaggedPolicy by remember {
+                mutableStateOf(Settings.getReplayGainUntaggedPolicy(this@SettingsActivity))
+            }
             var measureLoudnessWhileCharging by remember {
                 mutableStateOf(Settings.isMeasureLoudnessWhileCharging(this@SettingsActivity))
             }
@@ -95,6 +98,19 @@ class SettingsActivity : ComponentActivity() {
                         Settings.setReplayGainPreventClipping(this@SettingsActivity, checked)
                     },
                     measureLoudnessWhileCharging = measureLoudnessWhileCharging,
+                    replayGainUntaggedPolicy = replayGainUntaggedPolicy,
+                    onReplayGainUntaggedPolicyChange = { policy ->
+                        replayGainUntaggedPolicy = policy
+                        Settings.setReplayGainUntaggedPolicy(this@SettingsActivity, policy)
+                    },
+                    onReplayGainQualityPreset = {
+                        Settings.applyReplayGainQualityPreset(this@SettingsActivity)
+                        replayGainMode = Settings.getReplayGainMode(this@SettingsActivity)
+                        replayGainTarget = Settings.getReplayGainTarget(this@SettingsActivity)
+                        replayGainPreamp = Settings.getReplayGainPreamp(this@SettingsActivity)
+                        replayGainPreventClipping = Settings.isReplayGainPreventClipping(this@SettingsActivity)
+                        replayGainUntaggedPolicy = Settings.getReplayGainUntaggedPolicy(this@SettingsActivity)
+                    },
                     onMeasureLoudnessWhileChargingChange = { checked ->
                         measureLoudnessWhileCharging = checked
                         Settings.setMeasureLoudnessWhileCharging(this@SettingsActivity, checked)

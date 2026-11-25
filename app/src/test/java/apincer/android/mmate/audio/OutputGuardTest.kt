@@ -23,6 +23,7 @@ class OutputGuardTest {
         OutputGuard.report(0.5, clipped = false)
         val limited = OutputGuard.state.value.limitedAtMs
         assertTrue(limited > 0)
+        assertEquals(6.0206, OutputGuard.state.value.reductionDb, 0.001)
         OutputGuard.report(0.5, clipped = false)
         assertEquals(limited, OutputGuard.state.value.limitedAtMs)
         OutputGuard.report(1.0, clipped = true)

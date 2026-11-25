@@ -28,8 +28,9 @@ internal fun QuickTuningControls(
     onAdjust: (Double, Double) -> Unit = { _, _ -> },
     onAdjustFinished: (Double, Double) -> Unit = { _, _ -> },
     onNightListening: (Boolean) -> Unit = {},
+    onQuietListening: (Double) -> Unit = {},
     onCrossfeed: (Boolean) -> Unit = {},
-    onCompare: (Boolean) -> Unit = {},
+    onModeCompare: (Boolean?) -> Unit = {},
     onPreviewEnd: () -> Unit = {},
     remoteTarget: String? = null
 ) {
@@ -51,17 +52,21 @@ internal fun QuickTuningControls(
             if (status.binding.soundMode == SoundMode.CUSTOM) {
                 CustomSoundControls(endpoint?.key to status.profile?.id,
                     status.binding.bassDb, status.binding.trebleDb, status.binding.nightListening,
-                    enabled = canEnable, canCompare = status.active && remoteTarget == null, onAdjust = onAdjust, onAdjustFinished = onAdjustFinished, onCompare = onCompare, onPreviewEnd = onPreviewEnd)
+                    enabled = canEnable, canCompare = false, onAdjust = onAdjust, onAdjustFinished = onAdjustFinished, onPreviewEnd = onPreviewEnd)
             }
+            if (status.binding.soundMode != SoundMode.REFERENCE) ModeComparisonControls(
+                listOf(endpoint?.key, status.profile?.id, status.binding),
+                canEnable && status.active && remoteTarget == null, onModeCompare)
             NightListeningControl(status.binding.nightListening, canEnable, status.active, onNightListening)
             CrossfeedControl(status.binding.crossfeed, canEnable, status.active, onCrossfeed)
+            QuietListeningControl(status.binding.quietListening, canEnable, status.active && remoteTarget == null, onQuietListening)
         }
         VolumeLevelingControl(remoteTarget)
         HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
         TuningDisclosure("Correction", selectedName ?: "None · sound mode works independently") {
             CorrectionProfileSelector(choices, status.profile?.id, selectedName, output, canApply, onSelect,
                 supportsOutput = { endpoint?.supports(it) == true })
-            TuningHint("Optional headphone or speaker correction. Create and manage profiles in Manage tuning.")
+            TuningHint("Optional headphone or speaker correction. Create and manage profiles in Manage MateTune.")
         }
         error?.let { Text(it, color = MusicMateDesignTokens.Status.Destructive, fontSize = 13.sp) }
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth(), color = MusicMateDesignTokens.Brand.Gold)

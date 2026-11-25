@@ -403,7 +403,7 @@ private fun Done(step: CalibrationWizard.Step.Done, headphone: Boolean = false) 
     }
     NoiseNotice(profile.excludedBandsHz)
     Spacer(Modifier.height(16.dp))
-    Body(if (headphone) "The check describes this fixture and target, not an absolute headphone response. Manage this profile in Headphone EQ. USB output requires explicit EQ consent." else "Speaker Tuning applies this correction under the sound mode you choose, and picks it again whenever this speaker connects. Switch modes from the Speaker Tuning chip in Now Playing, and manage speakers in Settings.")
+    Body(if (headphone) "The check describes this fixture and target, not an absolute headphone response. Manage this profile in MateTune. USB output requires explicit EQ consent." else "MateTune applies this correction under the sound mode you choose, and picks it again whenever this speaker connects. Switch modes from the MateTune chip in Now Playing, and manage speakers in MateTune.")
 }
 
 @Composable

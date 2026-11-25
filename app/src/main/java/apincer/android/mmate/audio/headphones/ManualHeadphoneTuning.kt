@@ -59,6 +59,7 @@ enum class HeadphoneTonePreset(val label: String, val tone: HeadphoneTone) {
     WARM("Warm", HeadphoneTone(bassDb = 3.0, trebleDb = -2.0)),
     BASS("Bass boost", HeadphoneTone(bassDb = 5.0)),
     U_SHAPE("U-shape", HeadphoneTone(bassDb = 4.0, midDb = -1.0, trebleDb = 3.0)),
+    GENTLE_V("Gentle V", HeadphoneTone(bassDb = 2.5, midDb = -1.0, trebleDb = 2.5)),
     V_SHAPE("V-shape", HeadphoneTone(bassDb = 5.0, midDb = -3.0, trebleDb = 5.0)),
     VOCAL("Vocal", HeadphoneTone(bassDb = -1.0, midDb = 3.0, trebleDb = 1.0)),
     BRIGHT("Bright", HeadphoneTone(trebleDb = 3.0)),

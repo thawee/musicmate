@@ -62,7 +62,7 @@ class FiveStepListeningUiTest {
         compose.onNodeWithText("Female voice").performScrollTo().performClick()
         compose.onNodeWithText("Warmth").performScrollTo()
         screenshot("five-step-listening")
-        compose.onNodeWithText("Playback mode: Lively. This adds processing after saving. Choose Neutral in Audio tuning to hear only your calibration.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Playback mode: Lively. This adds processing after saving. Choose Neutral in MateTune to hear only your calibration.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Original").performScrollTo().performClick()
         compose.onNodeWithText("Play left").performScrollTo().performClick()
         screenshot("five-step-comparison")
@@ -95,7 +95,7 @@ class FiveStepListeningUiTest {
     }
 
     private fun screenshot(name: String) {
-        compose.onNodeWithText("Edit listening setup").captureToImage()
+        compose.onNodeWithText("Edit personal tuning").captureToImage()
         val descriptor = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
             .executeShellCommand("screencap -p /sdcard/Download/$name.png")
         android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { it.readBytes() }

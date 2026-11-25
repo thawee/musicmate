@@ -11,7 +11,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.material3.Slider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.headphones.HeadphoneStatus
+import androidx.compose.ui.res.stringResource
 import apincer.android.mmate.R
 
 internal data class TuningAudibility(val label: String, val reason: String)
@@ -57,7 +59,7 @@ internal fun TuningStatusControl(
             }, verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(if (usb) "USB sound tuning" else "Sound tuning", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                Text(stringResource(if (usb) R.string.matetune_usb else R.string.matetune_enable), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                     color = if (audibility.label == "EQ on") MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Primary)
                 TuningHint(if (audibility.label == "EQ on") "On" else if (audibility.label == "EQ off" && !usb) "Bypassed · your settings are saved" else audibility.reason)
             }
@@ -103,7 +105,7 @@ internal fun TuningChoiceChip(label: String, selected: Boolean, enabled: Boolean
 internal fun soundModeDescription(mode: SoundMode): String = when (mode) {
     SoundMode.REFERENCE -> "Balanced sound, no added tone shaping"
     SoundMode.BASS -> "Deeper, punchier bass"
-    SoundMode.VOCAL -> "Clearer, forward voices"
+    SoundMode.VOCAL -> "Vocal presence at 2.5 kHz · adds to your correction"
     SoundMode.LIVELY -> "Punchy bass, crisp detail"
     SoundMode.RELAX -> "Warmer, softer highs"
     SoundMode.NIGHT -> "Tames loud moments"
@@ -117,6 +119,27 @@ internal fun NightListeningControl(checked: Boolean, enabled: Boolean = true, ac
 @Composable
 internal fun CrossfeedControl(checked: Boolean, enabled: Boolean = true, active: Boolean = true, onChange: (Boolean) -> Unit) =
     TuningSwitch("Crossfeed", "Blends a little of each side into the other, like listening to speakers", checked, enabled, active, onChange)
+
+/** Manual compensation: output volume cannot establish the listener's acoustic level. */
+@Composable
+internal fun QuietListeningControl(strength: Double, enabled: Boolean = true, active: Boolean = true,
+    onChange: (Double) -> Unit) {
+    val amount = if (strength.isFinite()) strength.coerceIn(0.0, 1.0) else 0.0
+    var draft by remember(amount) { mutableFloatStateOf(amount.toFloat()) }
+    Column {
+        TuningSwitch("Quiet listening", "Adds gentle fullness at low volume", amount > 0.0,
+            enabled, active) { onChange(if (it) 0.5 else 0.0) }
+        if (amount > 0.0) {
+            Text("Strength: ${(draft * 100).toInt()}%", fontSize = 13.sp,
+                color = MusicMateDesignTokens.Text.Secondary)
+            Slider(value = draft, onValueChange = { draft = it },
+                onValueChangeFinished = { onChange(draft.toDouble()) }, enabled = enabled,
+                valueRange = 0.05f..1f,
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Quiet listening strength" })
+            TuningHint("Manual adjustment · reduce strength at higher listening volumes")
+        }
+    }
+}
 
 /** [active] false: the option saves, but this output plays without tuning. */
 @Composable

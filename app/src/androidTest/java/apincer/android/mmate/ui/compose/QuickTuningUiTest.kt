@@ -37,9 +37,9 @@ class QuickTuningUiTest {
         compose.runOnIdle { enabled = false }
         compose.onNodeWithText("Custom · Bypassed").assertIsDisplayed()
         compose.onNodeWithContentDescription("Night listening active", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithContentDescription("Audio tuning").assert(
+        compose.onNodeWithContentDescription("MateTune").assert(
             SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.StateDescription,
-                "Bypassed. Custom is selected; correction and sound processing are not applied. Night listening saved, inactive. My headphones"))
+                "Bypassed. Custom is selected; correction and sound processing are not applied. Night listening saved, inactive. Crossfeed off. My headphones"))
         compose.runOnIdle { enabled = true; unavailable = true }
         compose.onNodeWithText("Custom · Unavailable").assertIsDisplayed()
         compose.onNodeWithContentDescription("Night listening active", useUnmergedTree = true).assertDoesNotExist()
@@ -67,7 +67,7 @@ class QuickTuningUiTest {
         val primary = compose.onNodeWithText("Vocal · On", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val secondary = compose.onNodeWithText(profile, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue("Correction belongs below preset and status", secondary.top >= primary.bottom)
-        compose.onNodeWithContentDescription("Audio tuning").performClick()
+        compose.onNodeWithContentDescription("MateTune").performClick()
         compose.runOnIdle { assertTrue(clicked); enabled = false }
         compose.onNodeWithText("Vocal · Bypassed").assertIsDisplayed()
         compose.onNodeWithText(profile).assertIsDisplayed()
@@ -88,7 +88,7 @@ class QuickTuningUiTest {
                 }
             }
         }
-        compose.onNodeWithText("USB sound tuning").assertIsDisplayed()
+        compose.onNodeWithText("Enable MateTune for USB").assertIsDisplayed()
         compose.onNodeWithText("Enable USB EQ to allow sample processing").assertIsDisplayed()
         compose.onNodeWithText("Custom").performScrollTo().assertIsSelected()
         compose.onNodeWithText("Edit Custom").assertDoesNotExist()
@@ -111,7 +111,7 @@ class QuickTuningUiTest {
                 }
             }
         }
-        compose.onNode(isToggleable() and hasText("Sound tuning")).assertIsEnabled().performClick()
+        compose.onNode(isToggleable() and hasText("Enable MateTune")).assertIsEnabled().performClick()
         compose.onNodeWithText("Vocal").performScrollTo().assertIsEnabled().performClick()
         compose.onNodeWithContentDescription("Night listening").performScrollTo().assertIsEnabled().performClick()
         compose.runOnIdle { assertTrue(enabled); assertTrue(night); assertEquals(SoundMode.VOCAL, mode) }
@@ -132,7 +132,7 @@ class QuickTuningUiTest {
         compose.onNodeWithText("Playing on Living Room. Tuning applies only when Music Mate plays on this phone.").assertIsDisplayed()
         compose.onNodeWithText("Not applied to the current player").assertIsDisplayed()
         compose.onNodeWithText("On").assertDoesNotExist()
-        compose.onNodeWithText("Compare").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Compare levels").performScrollTo().assertIsNotEnabled()
     }
 
     @Test fun disconnectedOutputExplainsUnavailableProcessingAndKeepsManagementReachable() {
@@ -145,11 +145,11 @@ class QuickTuningUiTest {
                 }
             }
         }
-        compose.onNodeWithText("Sound tuning").assertIsDisplayed()
+        compose.onNodeWithText("Enable MateTune").assertIsDisplayed()
         compose.onNodeWithText("Connect a compatible output").assertIsDisplayed()
-        compose.onNode(isToggleable() and hasText("Sound tuning")).assertIsNotEnabled()
+        compose.onNode(isToggleable() and hasText("Enable MateTune")).assertIsNotEnabled()
         compose.onNodeWithText("Create profile").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Manage tuning").assertIsDisplayed().performClick()
+        compose.onNodeWithContentDescription("Manage MateTune").assertIsDisplayed().performClick()
         compose.runOnIdle { assertTrue(manage) }
     }
 
@@ -184,34 +184,34 @@ class QuickTuningUiTest {
                 }
             }
         }
-        compose.onNode(isToggleable() and hasText("Sound tuning")).performClick()
+        compose.onNode(isToggleable() and hasText("Enable MateTune")).performClick()
         compose.runOnIdle { assertEquals(false, enabled); assertFalse(selectionChanged) }
-        compose.onNodeWithText("My headphones").assertIsDisplayed()
         compose.onNodeWithText("Vocal").assertIsSelected()
+        compose.onNodeWithText("My headphones").performScrollTo().assertIsDisplayed()
     }
 
     @Test fun playbackChipOpensQuickPanelAndCanExpandToFullEditor() {
         compose.setContent { MusicMateTheme { AudioTuningChip() } }
-        compose.onNodeWithContentDescription("Audio tuning").performClick()
-        compose.onNodeWithText("Quick tuning").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Manage tuning").performClick()
-        compose.onNodeWithText("Audio tuning").assertIsDisplayed()
+        compose.onNodeWithContentDescription("MateTune").performClick()
+        compose.onNodeWithText("MateTune · Quick").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Manage MateTune").performClick()
+        compose.onNodeWithText("MateTune").assertIsDisplayed()
         compose.onNodeWithText("Correction").performScrollTo().performClick()
         compose.onNodeWithText("Calibrate your sound").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Close audio tuning").performClick()
-        compose.onNodeWithContentDescription("Audio tuning").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Close MateTune").performClick()
+        compose.onNodeWithContentDescription("MateTune").assertIsDisplayed()
     }
 
     @Test fun manageTuningOpensListeningDraftAndCancelReturnsToFullEditor() {
         compose.setContent { MusicMateTheme { QuickAudioTuningDialog {} } }
         compose.onNodeWithText("Create profile").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Manage tuning").performClick()
+        compose.onNodeWithContentDescription("Manage MateTune").performClick()
         compose.onNodeWithText("Correction").performScrollTo().performClick()
         compose.onNodeWithText("Listening").performScrollTo().performClick()
-        compose.onNodeWithText("Create listening profile").assertIsDisplayed()
+        compose.onNodeWithText("Create personal tuning").assertIsDisplayed()
         compose.onNodeWithText("Cancel").performClick()
-        compose.onNodeWithText("Audio tuning").assertIsDisplayed()
-        compose.onNodeWithText("Quick tuning").assertDoesNotExist()
+        compose.onNodeWithText("MateTune").assertIsDisplayed()
+        compose.onNodeWithText("MateTune · Quick").assertDoesNotExist()
         compose.onNodeWithText("Calibrate your sound").performScrollTo().assertIsDisplayed()
     }
 
@@ -239,7 +239,7 @@ class QuickTuningUiTest {
         compose.onNodeWithText("Vocal").performScrollTo().performClick()
         compose.runOnIdle { assertEquals(SoundMode.VOCAL, mode); assertNull(enabled) }
         compose.onNodeWithText("Create profile").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Manage tuning").performClick()
+        compose.onNodeWithContentDescription("Manage MateTune").performClick()
         compose.runOnIdle { assertTrue(full) }
         compose.onNodeWithText("Calibrate your sound").assertDoesNotExist()
         compose.onNodeWithText("EQ CURVE").assertDoesNotExist()
@@ -288,7 +288,7 @@ class QuickTuningUiTest {
             }
         }
         compose.onNodeWithText("Vocal").assertIsSelected()
-        compose.onNodeWithText("Clearer, forward voices").assertIsDisplayed()
+        compose.onNodeWithText("Vocal presence at 2.5 kHz · adds to your correction").assertIsDisplayed()
         compose.onNodeWithText("CORRECTION PROFILE").assertDoesNotExist()
         compose.onNodeWithText("Create profile").assertDoesNotExist()
         if (scale == 1f) {
@@ -306,7 +306,7 @@ class QuickTuningUiTest {
         }
     }
 
-    private fun screenshot(name: String, title: String = "Quick tuning") {
+    private fun screenshot(name: String, title: String = "MateTune · Quick") {
         compose.onNodeWithText(title).captureToImage()
         val descriptor = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation
             .executeShellCommand("screencap -p /sdcard/Download/$name.png")

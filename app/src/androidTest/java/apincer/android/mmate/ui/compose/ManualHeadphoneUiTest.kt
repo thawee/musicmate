@@ -160,7 +160,7 @@ class ManualHeadphoneUiTest {
         composeRule.onNodeWithContentDescription("Bass adjustment").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Treble adjustment").assertDoesNotExist()
         composeRule.onNodeWithText("Manage profiles").performScrollTo().performClick()
-        composeRule.onNodeWithText("Edit listening setup").performScrollTo().performClick()
+        composeRule.onNodeWithText("Edit personal tuning").performScrollTo().performClick()
         composeRule.runOnIdle { assertEquals(profile.id, editing?.id) }
     }
 

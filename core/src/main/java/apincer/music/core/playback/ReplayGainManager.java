@@ -19,6 +19,8 @@ import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import apincer.music.core.Settings;
 import apincer.music.core.codec.TagReader;
@@ -44,6 +46,12 @@ public class ReplayGainManager {
     static final double UNTAGGED_MASTER_LUFS = -9.0;
     /** +12 dB, so a bad peak tag cannot make a track deafening. */
     static final double MAX_BOOST = 3.981;
+    // Broad sanity limits: preserve quiet recordings and intersample peaks, reject corrupt tags.
+    private static final double MAX_GAIN_DB = 60.0;
+    private static final double MAX_PEAK = 64.0;
+    private static final Pattern REPLAY_GAIN_NUMBER = Pattern.compile(
+            "([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?)\\s*(dB)?",
+            Pattern.CASE_INSENSITIVE);
 
     // Cache parsed ReplayGain info for up to 500 tracks to avoid disk I/O on hot paths
     private final LruCache<String, ReplayGainInfo> cache = new LruCache<>(500);
@@ -127,8 +135,7 @@ public class ReplayGainManager {
                 // Fallback tag check
                 String tg = tag.getFirst("REPLAYGAIN_TRACK_GAIN");
                 if (tg != null && !tg.isEmpty()) {
-                    info.trackGainDb = parseGain(tg);
-                    info.hasTrackGain = true;
+                    setGain(info, tg, false);
                 }
             }
 
@@ -147,28 +154,37 @@ public class ReplayGainManager {
         String mode = Settings.getReplayGainMode(context);
         if ("off".equalsIgnoreCase(mode)) return Leveling.OFF;
         return level(mode, Settings.getReplayGainTarget(context), Settings.getReplayGainPreamp(context),
-                Settings.isReplayGainPreventClipping(context), getReplayGain(path));
+                Settings.isReplayGainPreventClipping(context), getReplayGain(path),
+                "attenuate".equals(Settings.getReplayGainUntaggedPolicy(context)));
     }
 
     public static Leveling level(String mode, float targetLufs, float preAmpDb, boolean preventClipping, ReplayGainInfo info) {
+        return level(mode, targetLufs, preAmpDb, preventClipping, info, true);
+    }
+
+    public static Leveling level(String mode, float targetLufs, float preAmpDb, boolean preventClipping,
+                                 ReplayGainInfo info, boolean attenuateUntagged) {
         if ("off".equalsIgnoreCase(mode)) return Leveling.OFF;
+        if (!Float.isFinite(targetLufs)) targetLufs = (float) REFERENCE_LUFS;
+        if (!Float.isFinite(preAmpDb)) preAmpDb = 0f;
         // Tags carry the gain to the ReplayGain 2 reference; a louder target needs less cut
         double targetOffsetDb = targetLufs - REFERENCE_LUFS;
 
         double gainDb;
         double peak;
         boolean album = false;
-        if (info != null && "album".equalsIgnoreCase(mode) && info.hasAlbumGain) {
+        if (info != null && "album".equalsIgnoreCase(mode) && info.hasAlbumGain && isValidGain(info.albumGainDb)) {
             gainDb = info.albumGainDb;
-            peak = info.albumPeak > 0 ? info.albumPeak : (info.trackPeak > 0 ? info.trackPeak : 1.0);
+            peak = validPeakOrDefault(info.albumPeak);
             album = true;
-        } else if (info != null && info.hasTrackGain) {
+        } else if (info != null && info.hasTrackGain && isValidGain(info.trackGainDb)) {
             gainDb = info.trackGainDb;
-            peak = info.trackPeak > 0 ? info.trackPeak : 1.0;
+            peak = validPeakOrDefault(info.trackPeak);
         } else {
+            if (!attenuateUntagged) return new Leveling(Leveling.Kind.NO_TAGS, 1.0f, false);
             // Untagged tracks are assumed to be typical modern masters; with no peak known they are never raised
             double untaggedDb = Math.min(0.0, targetLufs - UNTAGGED_MASTER_LUFS + preAmpDb);
-            return new Leveling(Leveling.Kind.NO_TAGS, (float) Math.pow(10.0, untaggedDb / 20.0), false);
+            return new Leveling(Leveling.Kind.NO_TAGS, (float) Math.max(0.01, Math.pow(10.0, untaggedDb / 20.0)), false);
         }
 
         double linearScale = Math.pow(10.0, (gainDb + targetOffsetDb + preAmpDb) / 20.0);
@@ -246,11 +262,10 @@ public class ReplayGainManager {
         return true;
     }
 
-    private void parseVorbisReplayGain(VorbisCommentTag vorbis, ReplayGainInfo info) {
+    static void parseVorbisReplayGain(VorbisCommentTag vorbis, ReplayGainInfo info) {
         String tg = vorbis.getFirst("REPLAYGAIN_TRACK_GAIN");
         if (tg != null && !tg.isEmpty()) {
-            info.trackGainDb = parseGain(tg);
-            info.hasTrackGain = true;
+            setGain(info, tg, false);
         }
         String tp = vorbis.getFirst("REPLAYGAIN_TRACK_PEAK");
         if (tp != null && !tp.isEmpty()) {
@@ -258,8 +273,7 @@ public class ReplayGainManager {
         }
         String ag = vorbis.getFirst("REPLAYGAIN_ALBUM_GAIN");
         if (ag != null && !ag.isEmpty()) {
-            info.albumGainDb = parseGain(ag);
-            info.hasAlbumGain = true;
+            setGain(info, ag, true);
         }
         String ap = vorbis.getFirst("REPLAYGAIN_ALBUM_PEAK");
         if (ap != null && !ap.isEmpty()) {
@@ -275,13 +289,11 @@ public class ReplayGainManager {
                     String desc = body.getDescription();
                     String text = body.getText();
                     if ("REPLAYGAIN_TRACK_GAIN".equalsIgnoreCase(desc)) {
-                        info.trackGainDb = parseGain(text);
-                        info.hasTrackGain = true;
+                        setGain(info, text, false);
                     } else if ("REPLAYGAIN_TRACK_PEAK".equalsIgnoreCase(desc)) {
                         info.trackPeak = parsePeak(text);
                     } else if ("REPLAYGAIN_ALBUM_GAIN".equalsIgnoreCase(desc)) {
-                        info.albumGainDb = parseGain(text);
-                        info.hasAlbumGain = true;
+                        setGain(info, text, true);
                     } else if ("REPLAYGAIN_ALBUM_PEAK".equalsIgnoreCase(desc)) {
                         info.albumPeak = parsePeak(text);
                     }
@@ -293,8 +305,7 @@ public class ReplayGainManager {
     private void parseMp4ReplayGain(Mp4Tag mp4, ReplayGainInfo info) {
         String tg = mp4.getFirst("----:com.apple.iTunes:replaygain_track_gain");
         if (tg != null && !tg.isEmpty()) {
-            info.trackGainDb = parseGain(tg);
-            info.hasTrackGain = true;
+            setGain(info, tg, false);
         }
         String tp = mp4.getFirst("----:com.apple.iTunes:replaygain_track_peak");
         if (tp != null && !tp.isEmpty()) {
@@ -302,8 +313,7 @@ public class ReplayGainManager {
         }
         String ag = mp4.getFirst("----:com.apple.iTunes:replaygain_album_gain");
         if (ag != null && !ag.isEmpty()) {
-            info.albumGainDb = parseGain(ag);
-            info.hasAlbumGain = true;
+            setGain(info, ag, true);
         }
         String ap = mp4.getFirst("----:com.apple.iTunes:replaygain_album_peak");
         if (ap != null && !ap.isEmpty()) {
@@ -326,25 +336,51 @@ public class ReplayGainManager {
         }
     }
 
-    public static double parseGain(String gainStr) {
-        if (gainStr == null) return 0.0;
-        String clean = gainStr.replace("dB", "").replace("db", "").replace("+", "").trim();
-        try {
-            return Double.parseDouble(clean);
-        } catch (NumberFormatException e) {
-            return 0.0;
+    private static boolean isValidGain(double gain) {
+        return Double.isFinite(gain) && Math.abs(gain) <= MAX_GAIN_DB;
+    }
+
+    private static double validPeakOrDefault(double peak) {
+        return Double.isFinite(peak) && peak > 0.0 && peak <= MAX_PEAK ? peak : 1.0;
+    }
+
+    private static void setGain(ReplayGainInfo info, String text, boolean album) {
+        double gain = parseGainValue(text);
+        boolean valid = isValidGain(gain);
+        if (album) {
+            info.albumGainDb = valid ? gain : 0.0;
+            info.hasAlbumGain = valid;
+        } else {
+            info.trackGainDb = valid ? gain : 0.0;
+            info.hasTrackGain = valid;
         }
+    }
+
+    private static double parseGainValue(String text) {
+        if (text == null) return Double.NaN;
+        Matcher number = REPLAY_GAIN_NUMBER.matcher(text.trim());
+        if (!number.matches()) return Double.NaN;
+        try {
+            double gain = Double.parseDouble(number.group(1));
+            return isValidGain(gain) ? gain : Double.NaN;
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+    }
+
+    public static double parseGain(String gainStr) {
+        double gain = parseGainValue(gainStr);
+        return isValidGain(gain) ? gain : 0.0;
     }
 
     public static double parsePeak(String peakStr) {
         if (peakStr == null) return 1.0;
-        String clean = peakStr.trim();
+        Matcher number = REPLAY_GAIN_NUMBER.matcher(peakStr.trim());
+        if (!number.matches()) return 1.0;
         try {
-            if (clean.toLowerCase(Locale.US).contains("db")) {
-                double peakDb = parseGain(clean);
-                return Math.pow(10.0, peakDb / 20.0);
-            }
-            return Double.parseDouble(clean);
+            double peak = Double.parseDouble(number.group(1));
+            if (number.group(2) != null) peak = Math.pow(10.0, peak / 20.0);
+            return validPeakOrDefault(peak);
         } catch (NumberFormatException e) {
             return 1.0;
         }

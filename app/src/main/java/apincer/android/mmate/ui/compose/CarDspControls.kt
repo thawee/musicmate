@@ -71,23 +71,26 @@ internal fun LegacySpeakerSoundModes(compact: Boolean = false, available: Boolea
     TuningSoundModes(choice.mode, available && !busy) { mode ->
         CarDspPreferences.update(context, choice.copy(mode = mode))
     }
-    val comparing by CarDspPreferences.comparingCustom.collectAsState()
     if (choice.mode == SoundMode.CUSTOM) {
         CustomSoundControls(choice.profileId, choice.bassDb, choice.trebleDb, choice.nightListening,
-            enabled = available && !busy, canCompare = available && choice.enabled, rangeDb = SoundMode.TRIM_DB.toFloat(),
+            enabled = available && !busy, canCompare = false, rangeDb = SoundMode.TRIM_DB.toFloat(),
             onAdjust = { bass, treble -> CarDspPreferences.previewCustomTrims(bass, treble) },
             onAdjustFinished = { bass, treble -> CarDspPreferences.update(context,
                 CarDspPreferences.state.value.copy(bassDb = bass, trebleDb = treble)) },
-            onCompare = { CarDspPreferences.setCustomComparison(it) },
             onPreviewEnd = { CarDspPreferences.clearCustomPreview() })
     }
     NightListeningControl(choice.nightListening, available && !busy) {
         CarDspPreferences.update(context, CarDspPreferences.state.value.copy(nightListening = it))
     }
+    QuietListeningControl(choice.quietListening, available && !busy, available && choice.enabled) {
+        CarDspPreferences.update(context, CarDspPreferences.state.value.copy(quietListening = it))
+    }
+    if (choice.mode != SoundMode.REFERENCE) ModeComparisonControls(choice,
+        available && choice.enabled && !busy, CarDspPreferences::setModeComparison)
     if (!compact) TuningDisclosure("Response curve") {
-        TuningResponseCurve(choice.settings(comparingCustom = comparing)?.bands
-        ?: (choice.correction + if (comparing && choice.mode == SoundMode.CUSTOM) emptyList() else choice.mode.bands(choice.bassDb, choice.trebleDb)), choice.mode,
-        active = available && choice.enabled, previewState = audibility.label)
+        val settings = choice.copy(enabled = true).settings()!!
+        TuningResponseCurve(settings.bands, choice.mode,
+            active = available && choice.enabled, previewState = audibility.label, settings = settings)
     }
 }
 
@@ -108,12 +111,18 @@ private fun legacySpeakerAudibility(available: Boolean, enabled: Boolean, remote
 
 /** What the chosen mode and car correction do together, 20 Hz to 20 kHz; the scale is ±6 dB, wider when the curve needs it. */
 @Composable
-internal fun CorrectionCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, modifier: Modifier = Modifier) {
-    val points = remember(bands) {
-        val chain = DspChain(bands, 48_000, 2)
-        DoubleArray(CURVE_POINTS) { chain.responseDb(20.0 * Math.pow(1_000.0, it / (CURVE_POINTS - 1.0))) }
+internal fun CorrectionCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, modifier: Modifier = Modifier,
+    settings: apincer.android.mmate.audio.dsp.CarDspSettings? = null) {
+    val curves = remember(bands, settings) {
+        val chain = if (settings == null) DspChain(bands, 48_000, 2) else DspChain(settings.bands,
+            48_000, 2, settings.requestedPreampDb, settings.leftBands, settings.rightBands,
+            settings.balanceDb, settings.monoBands, settings.crossfeed)
+        List(2) { channel -> DoubleArray(CURVE_POINTS) {
+            chain.channelResponseDb(20.0 * Math.pow(1_000.0, it / (CURVE_POINTS - 1.0)), channel)
+        } }
     }
     val gold = MusicMateDesignTokens.Brand.Gold
+    val rightColor = MusicMateDesignTokens.Text.Secondary
     val zero = MusicMateDesignTokens.Surfaces.BorderPrimary
     val gridLine = MusicMateDesignTokens.Surfaces.BorderSubtle
     val measurer = rememberTextMeasurer()
@@ -126,7 +135,7 @@ internal fun CorrectionCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand
             .background(MusicMateDesignTokens.Surfaces.Canvas)
             .semantics { contentDescription = "Combined correction and sound mode EQ curve" }
     ) {
-        val span = maxOf(6.0, kotlin.math.ceil(points.maxOf { kotlin.math.abs(it) } / 3.0) * 3.0)
+        val span = maxOf(6.0, kotlin.math.ceil(curves.maxOf { points -> points.maxOf { kotlin.math.abs(it) } } / 3.0) * 3.0)
         val dbLabel = measurer.measure("%+.0f dB".format(-span), axis)
         val plotLeft = dbLabel.size.width + 12.dp.toPx()
         val plotRight = size.width - 12.dp.toPx()
@@ -156,12 +165,14 @@ internal fun CorrectionCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand
             val label = measurer.measure(if (db == 0.0) "0 dB" else "%+.0f dB".format(db), axis)
             drawText(label, topLeft = Offset(plotLeft - label.size.width - 6.dp.toPx(), y(db) - label.size.height / 2f))
         }
-        val path = Path()
-        points.forEachIndexed { i, db ->
-            val x = plotLeft + i * plotW / (CURVE_POINTS - 1)
-            if (i == 0) path.moveTo(x, y(db)) else path.lineTo(x, y(db))
+        curves.forEachIndexed { channel, points ->
+            val path = Path()
+            points.forEachIndexed { i, db ->
+                val x = plotLeft + i * plotW / (CURVE_POINTS - 1)
+                if (i == 0) path.moveTo(x, y(db)) else path.lineTo(x, y(db))
+            }
+            drawPath(path, if (channel == 0) gold else rightColor, style = Stroke(width = if (channel == 0) 3.dp.toPx() else 1.dp.toPx()))
         }
-        drawPath(path, gold, style = Stroke(width = 2.dp.toPx()))
     }
 }
 

@@ -43,8 +43,9 @@ class HeadphoneProfileStore(private val file: File) {
 
     @Synchronized
     fun save(library: HeadphoneLibrary) {
-        HeadphoneValidation.library(library)
-        val bytes = json.encodeToString(library).toByteArray(Charsets.UTF_8)
+        val normalized = library.copy(bindings = library.bindings.mapValues { it.value.normalized() })
+        HeadphoneValidation.library(normalized)
+        val bytes = json.encodeToString(normalized).toByteArray(Charsets.UTF_8)
         require(bytes.size <= MAX_LIBRARY_BYTES) { "Headphone library is too large." }
         val destination = file.absoluteFile
         val parent = destination.parentFile ?: throw IOException("Headphone library needs a parent directory.")

@@ -67,7 +67,7 @@ class AudioTuningSheetUiTest {
                 }
             }
         }
-        val title = compose.onNodeWithText(if (compact) "Quick tuning" else "Audio tuning")
+        val title = compose.onNodeWithText(if (compact) "MateTune · Quick" else "MateTune")
         val top = title.fetchSemanticsNode().boundsInRoot.top
         val body = compose.onNode(hasScrollAction())
         // Record movement during a complete edge swipe, including its spring-back frames.
@@ -87,7 +87,7 @@ class AudioTuningSheetUiTest {
         }
         body.performScrollToNode(hasText("Tuning row 39"))
         compose.onNodeWithText("Tuning row 39").assertIsDisplayed()
-        compose.onNodeWithContentDescription(if (compact) "Close quick tuning" else "Close audio tuning").assertIsDisplayed()
+        compose.onNodeWithContentDescription(if (compact) "Close MateTune quick controls" else "Close MateTune").assertIsDisplayed()
     }
 
     private fun verifyEditor(scale: Float, name: String) {
@@ -106,7 +106,7 @@ class AudioTuningSheetUiTest {
                 }
             }
         }
-        compose.onNodeWithText("Studio headphones").assertIsDisplayed()
+        compose.onNodeWithText("Studio headphones").performScrollTo().assertIsDisplayed()
         compose.waitForIdle()
         screenshot("dsp-$name")
         compose.onNodeWithText("Response curve").performScrollTo().performClick()
@@ -119,12 +119,12 @@ class AudioTuningSheetUiTest {
         compose.onNodeWithText("Listening").performScrollTo().performClick()
         compose.runOnIdle { assertTrue(listening) }
         screenshot("dsp-$name-calibration")
-        compose.onNodeWithContentDescription("Close audio tuning").assertIsDisplayed().performClick()
+        compose.onNodeWithContentDescription("Close MateTune").assertIsDisplayed().performClick()
         compose.runOnIdle { assertTrue(closed) }
     }
 
     private fun screenshot(name: String) {
-        compose.onNodeWithText("Audio tuning").captureToImage()
+        compose.onNodeWithText("MateTune").captureToImage()
         val result = InstrumentationRegistry.getInstrumentation().uiAutomation
             .executeShellCommand("screencap -p /sdcard/Download/$name.png")
         ParcelFileDescriptor.AutoCloseInputStream(result).use { it.readBytes() }

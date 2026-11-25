@@ -50,6 +50,74 @@ class CarDspPreferencesTest {
         approximate = false
     )
 
+    @Test fun quietListeningIsSavedPerProfileAndLegacyChoicesDefaultOff() {
+        val prefs = MemoryPreferences()
+        assertEquals(0.0, CarDspPreferences.load(prefs, null, CarDspChoice(quietListening = 0.8)).quietListening, 0.0)
+        val base = CarDspChoice(enabled = true, quietListening = 0.25, nightListening = true)
+        CarDspPreferences.save(prefs, base)
+        val a = CarDspPreferences.select(prefs, car("quiet-a"), base)
+        assertEquals(0.0, a.quietListening, 0.0)
+        CarDspPreferences.save(prefs, a.copy(quietListening = 0.75))
+        assertEquals(0.25, CarDspPreferences.load(prefs, null, a).quietListening, 0.0)
+        assertEquals(0.75, CarDspPreferences.load(prefs, car("quiet-a"), base).quietListening, 0.0)
+        prefs.edit().putFloat("quiet_listening:quiet-a", Float.NaN).apply()
+        assertEquals(0.0, CarDspPreferences.load(prefs, car("quiet-a"), base).quietListening, 0.0)
+        CarDspPreferences.save(prefs, base.copy(quietListening = 5.0))
+        assertEquals(1.0, CarDspPreferences.load(prefs, null, base).quietListening, 0.0)
+    }
+
+    @Test fun modeComparisonKeepsQuietListeningAndSetterNormalizesIt() {
+        val prefs = MemoryPreferences()
+        val context = mockk<Context> {
+            every { getSharedPreferences("car_dsp", Context.MODE_PRIVATE) } returns prefs
+        }
+        val saved = CarDspChoice(enabled = true, mode = SoundMode.LIVELY, correction = car("quiet").bands,
+            quietListening = 0.5, nightListening = true)
+        CarDspPreferences.update(context, saved)
+        CarDspPreferences.setModeComparison(true)
+        assertEquals(saved.correction + QuietListening.bands(0.5), CarDsp.target!!.bands)
+        assertEquals(true, CarDsp.target!!.compress)
+        CarDspPreferences.setQuietListening(context, Double.POSITIVE_INFINITY)
+        assertEquals(0.0, CarDspPreferences.state.value.quietListening, 0.0)
+        assertEquals(saved.correction + saved.mode.bands(), CarDsp.target!!.bands)
+    }
+
+    @Test
+    fun modeComparisonRestoresOriginalAndClearsOnRoutesSettingsAndBypass() {
+        val prefs = MemoryPreferences()
+        val context = mockk<Context> {
+            every { getSharedPreferences("car_dsp", Context.MODE_PRIVATE) } returns prefs
+        }
+        val saved = CarDspChoice(enabled = true, mode = SoundMode.LIVELY,
+            nightListening = true, correction = car("a").bands)
+        CarDspPreferences.update(context, saved)
+        val persisted = prefs.all.toMap()
+        val original = CarDsp.target
+        CarDspPreferences.setModeComparison(true)
+        assertEquals(saved.correction, CarDsp.target!!.bands)
+        assertEquals(true, CarDsp.target!!.compress)
+        assertEquals(saved, CarDspPreferences.state.value)
+        assertEquals(persisted, prefs.all)
+        CarDspPreferences.setModeComparison(false)
+        assertEquals(original!!.bands, CarDsp.target!!.bands)
+        assertEquals(true, CarDsp.target!!.compress)
+        CarDspPreferences.setModeComparison(null)
+        assertSettingsEqual(original, CarDsp.target)
+        CarDspPreferences.setModeComparison(true)
+        CarDspPreferences.onRouteChanged()
+        assertSettingsEqual(original, CarDsp.target)
+        CarDspPreferences.setModeComparison(true)
+        val changed = saved.copy(mode = SoundMode.VOCAL, nightListening = false)
+        CarDspPreferences.update(context, changed)
+        assertSettingsEqual(changed.settings(), CarDsp.target)
+        CarDspPreferences.update(context, changed.copy(enabled = false))
+        for (comparison in listOf(true, false, null)) {
+            CarDspPreferences.setModeComparison(comparison)
+            assertNull(CarDsp.target)
+        }
+        CarDspPreferences.update(context, CarDspChoice())
+    }
+
     @Test
     fun transientComparisonAndSliderPreviewRestoreSavedChoiceWithoutWrites() {
         val prefs = MemoryPreferences()

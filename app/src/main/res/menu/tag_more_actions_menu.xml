@@ -31,6 +31,11 @@
     <!-- Group 2: Audio Analysis & Verification -->
     <group android:id="@+id/group_audio_analysis">
         <item
+            android:id="@+id/action_analyze_audio"
+            android:icon="@drawable/rounded_equalizer_24"
+            android:title="@string/audio_analysis_title"
+            app:showAsAction="never" />
+        <item
             android:id="@+id/action_spectrum"
             android:icon="@drawable/rounded_equalizer_24"
             android:title="@string/lossless_verifier"

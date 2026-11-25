@@ -77,9 +77,9 @@ class SoundSignatureUiTest {
         compose.setContent { MusicMateTheme { QuickAudioTuningDialog {} } }
         compose.onNodeWithText("Create profile").assertDoesNotExist()
         compose.onNodeWithText("Full audio tuning").assertDoesNotExist()
-        val action = compose.onNodeWithContentDescription("Manage tuning").assertIsDisplayed()
+        val action = compose.onNodeWithContentDescription("Manage MateTune").assertIsDisplayed()
         compose.onNodeWithText("Correction").performScrollTo().performClick()
-        compose.onNodeWithText("Optional headphone or speaker correction. Create and manage profiles in Manage tuning.")
+        compose.onNodeWithText("Optional headphone or speaker correction. Create and manage profiles in Manage MateTune.")
             .performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Create profile").assertDoesNotExist()
         compose.waitForIdle()
@@ -92,6 +92,6 @@ class SoundSignatureUiTest {
         action.assertIsDisplayed()
         assertEquals(top, action.fetchSemanticsNode().boundsInRoot.top, 1f)
         action.performClick()
-        compose.onNodeWithText("Audio tuning").assertIsDisplayed()
+        compose.onNodeWithText("MateTune").assertIsDisplayed()
     }
 }

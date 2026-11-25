@@ -19,13 +19,14 @@ data class CarDspChoice(
     val correction: List<PeqBand> = emptyList(),
     val profileName: String? = null,
     val profileId: String? = null,
-    val nightListening: Boolean = false
+    val nightListening: Boolean = false,
+    val quietListening: Double = 0.0
 ) {
     /** The car correction with the mode on top. */
     fun settings(comparingCustom: Boolean = false): CarDspSettings? {
         if (!enabled) return null
         val personal = if (comparingCustom && mode == SoundMode.CUSTOM) emptyList() else mode.bands(bassDb, trebleDb)
-        return CarDspSettings(correction + personal, compress = nightListening)
+        return CarDspSettings(correction + personal + QuietListening.bands(quietListening), compress = nightListening)
     }
 }
 
@@ -41,7 +42,20 @@ object CarDspPreferences {
     private const val BASS = "custom_bass_db"
     private const val TREBLE = "custom_treble_db"
     private const val NIGHT = "night_listening"
+    private const val QUIET = "quiet_listening"
     private const val ACTIVE_PROFILE = "active_profile"
+
+    private var modeComparison: Boolean? = null
+
+    @Synchronized
+    fun setModeComparison(hearCorrection: Boolean?) {
+        comparison.value = false
+        modeComparison = hearCorrection.takeIf { choice.value.enabled }
+        val selected = choice.value.settings()
+        CarDsp.target = if (modeComparison != null && selected != null)
+            ModeLevelMatch.select(selected, choice.value.copy(mode = SoundMode.REFERENCE).settings()!!, modeComparison!!)
+        else selected
+    }
 
     private var previewing = false
     private var savedChoice = CarDspChoice()
@@ -53,6 +67,7 @@ object CarDspPreferences {
     @JvmStatic
     @Synchronized
     fun setCustomComparison(comparing: Boolean) {
+        modeComparison = null
         comparison.value = comparing && choice.value.enabled && choice.value.mode == SoundMode.CUSTOM
         CarDsp.target = choice.value.settings(comparison.value)
     }
@@ -62,6 +77,7 @@ object CarDspPreferences {
     @Synchronized
     fun previewCustomTrims(bassDb: Double, trebleDb: Double) {
         require(bassDb.isFinite() && trebleDb.isFinite())
+        modeComparison = null
         comparison.value = false
         previewing = true
         val next = choice.value.copy(mode = SoundMode.CUSTOM,
@@ -73,7 +89,7 @@ object CarDspPreferences {
 
     @Synchronized
     internal fun onRouteChanged() {
-        if (previewing || comparison.value) apply(savedChoice)
+        if (previewing || comparison.value || modeComparison != null) apply(savedChoice)
     }
 
     @JvmStatic
@@ -114,7 +130,8 @@ object CarDspPreferences {
         val store = profiles(context)
         store.delete(id)
         val prefs = prefs(context)
-        prefs.edit().remove(key(MODE, id)).remove(key(BASS, id)).remove(key(TREBLE, id)).remove(key(NIGHT, id)).apply()
+        prefs.edit().remove(key(MODE, id)).remove(key(BASS, id)).remove(key(TREBLE, id)).remove(key(NIGHT, id))
+            .remove(key(QUIET, id)).apply()
         if (prefs.getString(ACTIVE_PROFILE, null) == id) setActiveProfile(context, store.list().firstOrNull())
     }
 
@@ -138,8 +155,14 @@ object CarDspPreferences {
     /** Saves on/off for every car and the mode for the active car only. */
     @JvmStatic
     fun update(context: Context, next: CarDspChoice) {
-        save(prefs(context), next)
-        apply(next)
+        val normalized = next.copy(quietListening = QuietListening.normalize(next.quietListening))
+        save(prefs(context), normalized)
+        apply(normalized)
+    }
+
+    @JvmStatic
+    fun setQuietListening(context: Context, strength: Double) {
+        update(context, savedChoice.copy(quietListening = strength))
     }
 
     internal fun select(prefs: SharedPreferences, profile: CarProfile?, current: CarDspChoice): CarDspChoice {
@@ -168,7 +191,8 @@ object CarDspPreferences {
             correction = profile?.bands ?: emptyList(),
             profileName = profile?.name,
             profileId = id,
-            nightListening = legacyNight || prefs.getBoolean(key(NIGHT, id), false)
+            nightListening = legacyNight || prefs.getBoolean(key(NIGHT, id), false),
+            quietListening = QuietListening.normalize(prefs.getFloat(key(QUIET, id), 0f).toDouble())
         )
         if (savedMode in listOf("DRIVE", "SLEEP", "FOCUS", "NIGHT", "BASS")) save(prefs, next)
         return next
@@ -179,6 +203,7 @@ object CarDspPreferences {
         prefs.edit()
             .putBoolean(ENABLED, next.enabled)
             .putBoolean(key(NIGHT, id), next.nightListening)
+            .putFloat(key(QUIET, id), QuietListening.normalize(next.quietListening).toFloat())
             .putString(key(MODE, id), next.mode.name)
             .putFloat(key(BASS, id), next.bassDb.toFloat())
             .putFloat(key(TREBLE, id), next.trebleDb.toFloat())
@@ -192,6 +217,7 @@ object CarDspPreferences {
     private var loaded = false
 
     private fun apply(next: CarDspChoice) {
+        modeComparison = null
         comparison.value = false
         previewing = false
         savedChoice = next

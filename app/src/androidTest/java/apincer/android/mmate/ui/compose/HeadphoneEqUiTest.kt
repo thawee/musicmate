@@ -101,7 +101,7 @@ class HeadphoneEqUiTest {
         }
         composeRule.onNodeWithText("Neutral").performScrollTo().performClick().assertIsSelected()
         composeRule.onNodeWithText("My headphones").performScrollTo().assertIsDisplayed()
-        composeRule.onNode(isToggleable() and hasText("USB sound tuning")).assertIsOn()
+        composeRule.onNode(isToggleable() and hasText("Enable MateTune for USB")).assertIsOn()
     }
 
     private val profile = HeadphoneProfile("test", "My headphones", "AutoEq.txt", -5.0,
@@ -122,12 +122,12 @@ class HeadphoneEqUiTest {
             }
         }
         composeRule.onNodeWithText("USB DAC").assertIsDisplayed()
-        composeRule.onNodeWithText("USB sound tuning").assertIsDisplayed()
+        composeRule.onNodeWithText("Enable MateTune for USB").assertIsDisplayed()
         composeRule.onNodeWithText("Enable USB EQ to allow sample processing").assertIsDisplayed()
-        composeRule.onNode(isToggleable() and hasText("USB sound tuning")).assertIsOff().performClick().assertIsOn()
+        composeRule.onNode(isToggleable() and hasText("Enable MateTune for USB")).assertIsOff().performClick().assertIsOn()
         composeRule.onNodeWithText("On").assertIsDisplayed()
-        composeRule.onNode(isToggleable() and hasText("USB sound tuning")).performClick().assertIsOff()
-        composeRule.onNodeWithText("USB sound tuning").assertIsDisplayed()
+        composeRule.onNode(isToggleable() and hasText("Enable MateTune for USB")).performClick().assertIsOff()
+        composeRule.onNodeWithText("Enable MateTune for USB").assertIsDisplayed()
         composeRule.onNodeWithText("Enable USB EQ to allow sample processing").assertIsDisplayed()
     }
 
@@ -146,7 +146,7 @@ class HeadphoneEqUiTest {
         composeRule.onNodeWithText("Correction").performScrollTo().performClick()
         composeRule.onNodeWithText("CORRECTION PROFILE").performScrollTo().performClick()
         composeRule.onNodeWithText("No correction").performClick()
-        composeRule.onNode(isToggleable() and hasText("USB sound tuning")).assertIsEnabled().assertIsOn()
+        composeRule.onNode(isToggleable() and hasText("Enable MateTune for USB")).assertIsEnabled().assertIsOn()
         composeRule.onNodeWithText("Vocal").performScrollTo().assertIsEnabled()
         composeRule.onNodeWithContentDescription("Night listening").performScrollTo().assertIsEnabled()
     }

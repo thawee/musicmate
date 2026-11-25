@@ -157,7 +157,7 @@ internal fun ManualHeadphoneDialog(
 
     ListeningDialogFrame(
         onDismissRequest = { if (!busy) { stopTest(); onDismiss() } },
-        title = { Text(if (profile == null) "Create listening profile" else "Edit listening setup") },
+        title = { Text(if (profile == null) "Create personal tuning" else "Edit personal tuning") },
         text = {
             Column(Modifier.fillMaxWidth().verticalScroll(scrollState), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Step ${page + 1} of 3", fontSize = 12.sp)
@@ -234,6 +234,8 @@ internal fun ManualHeadphoneDialog(
                                 }
                             }
                         }
+                        if (!guided && HeadphoneTonePreset.of(tone) == HeadphoneTonePreset.VOCAL)
+                            TuningHint("Vocal: fuller vocal body at 1 kHz. Playback Vocal adds presence at 2.5 kHz; the two can combine.")
                         if (!guided) TuningHint("100 Hz bass · 300 Hz warmth · 1 kHz vocals · 3 kHz clarity · 8 kHz detail")
                         if (!guided || testBand == HeadphoneTestBand.BASS)
                             ListeningToneSlider("Bass impact", tone.bassDb, !busy) { value -> updateTone { it.copy(bassDb = value) } }
@@ -272,12 +274,12 @@ internal fun ManualHeadphoneDialog(
                     if (sample.speechAssetPath != null) TuningHint("Voices: Open Speech Repository · speech recording, limited high treble.")
                     TuningHint("Musical examples use matched average levels. These previews include only your calibration.")
                     TuningHint(if (playbackMode == null)
-                        "Choose Neutral in Audio tuning to hear your saved calibration without extra tone shaping."
+                        "Choose Neutral in MateTune to hear your saved calibration without extra tone shaping."
                     else if (playbackMode == SoundMode.REFERENCE)
                         "Playback mode: Neutral. Your saved calibration plays without extra tone shaping."
                     else if (playbackMode == SoundMode.CUSTOM)
                         "Playback mode: Custom. Saving clears its extra bass and treble trims; your calibration remains."
-                    else "Playback mode: ${playbackMode.label}. This adds processing after saving. Choose Neutral in Audio tuning to hear only your calibration.")
+                    else "Playback mode: ${playbackMode.label}. This adds processing after saving. Choose Neutral in MateTune to hear only your calibration.")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(selected = bypass, enabled = !busy, onClick = { stopTest(); bypass = true }, label = { Text("Original") })
                         FilterChip(selected = !bypass, enabled = !busy, onClick = { stopTest(); bypass = false }, label = { Text("Adjusted") })

@@ -99,13 +99,14 @@ internal fun AudioTuningBadge(mode: SoundMode, enabled: Boolean, unavailable: Bo
         else if (crossfeed) "Crossfeed saved, inactive" else "Crossfeed off"
     val detail = if (crossfeedActive) "$profileName · Crossfeed" else profileName
     val accent = if (enabled) MusicMateDesignTokens.Brand.Gold else MusicMateDesignTokens.Text.Secondary
+    val tuningLabel = androidx.compose.ui.res.stringResource(apincer.android.mmate.R.string.nav_audio_tuning)
     Row(
         modifier.clip(RoundedCornerShape(8.dp))
             .background(MusicMateDesignTokens.Surfaces.GlassPill)
             .clickable(onClick = onClick).heightIn(min = 48.dp)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
-                contentDescription = "Audio tuning"
+                contentDescription = tuningLabel
                 stateDescription = "$stateLabel. $processingDescription. $nightDescription. $crossfeedDescription. $profileName" +
                     (guard?.let { ". Output ${it.label.lowercase()}" } ?: "")
             }.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -151,7 +152,7 @@ private const val GUARD_HOLD_MS = 3_000L
 
 /** [local] false: the guard reports this phone's output, not a remote player's. */
 @Composable
-private fun outputGuardLight(local: Boolean): GuardLight? {
+internal fun outputGuardLight(local: Boolean): GuardLight? {
     val state by OutputGuard.state.collectAsState()
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(state) {
@@ -221,7 +222,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                error = failure.message ?: "Audio tuning could not be saved."
+                error = failure.message ?: "MateTune settings could not be saved."
             } finally {
                 busy = false
             }
@@ -238,7 +239,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
-            error = failure.message ?: "Audio tuning could not be loaded."
+            error = failure.message ?: "MateTune settings could not be loaded."
         } finally {
             busy = false
         }
@@ -308,6 +309,7 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
                 val previous = CarDspPreferences.state.value
                 HeadphonePreferences.setSoundMode(context, endpoint, previous.mode)
                 HeadphonePreferences.setNightListening(context, endpoint, previous.nightListening)
+                HeadphonePreferences.setQuietListening(context, endpoint, previous.quietListening)
                 if (previous.mode == SoundMode.CUSTOM) HeadphonePreferences.adjust(context, endpoint, previous.bassDb, previous.trebleDb)
                 if (!endpoint.usb) HeadphonePreferences.setEnabled(context, endpoint, previous.enabled)
             }
@@ -354,8 +356,9 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
         onAdjust = { bass, treble -> targetEndpoint?.let { HeadphoneDsp.previewCustomTrims(it.key, bass, treble) } },
         onAdjustFinished = { bass, treble -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.adjust(context, endpoint, bass, treble) }) } },
         onNightListening = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setNightListening(context, endpoint, enabled) }) } },
+        onQuietListening = { strength -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setQuietListening(context, endpoint, strength) }) } },
         onCrossfeed = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setCrossfeed(context, endpoint, enabled) }) } },
-        onCompare = { comparing -> targetEndpoint?.let { HeadphoneDsp.setCustomComparison(it.key, comparing) } },
+        onModeCompare = { side -> targetEndpoint?.let { HeadphoneDsp.setModeComparison(it.key, side) } },
         onPreviewEnd = { targetEndpoint?.let { HeadphoneDsp.clearCustomPreview(it.key) } },
         onCreateProfile = { creatingProfile = true },
         speakerControls = if (useLegacy) ({ LegacySpeakerSoundModes(compact = true, busy = busy, showStatus = false) }) else null,
@@ -380,8 +383,9 @@ fun HeadphoneAudioSettings(initialOutput: CalibrationOutput? = null, quick: Bool
         onAdjust = { bass, treble -> targetEndpoint?.let { HeadphoneDsp.previewCustomTrims(it.key, bass, treble) } },
         onAdjustFinished = { bass, treble -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.adjust(context, endpoint, bass, treble) }) } },
         onNightListening = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setNightListening(context, endpoint, enabled) }) } },
+        onQuietListening = { strength -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setQuietListening(context, endpoint, strength) }) } },
         onCrossfeed = { enabled -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setCrossfeed(context, endpoint, enabled) }) } },
-        onCompare = { comparing -> targetEndpoint?.let { HeadphoneDsp.setCustomComparison(it.key, comparing) } },
+        onModeCompare = { side -> targetEndpoint?.let { HeadphoneDsp.setModeComparison(it.key, side) } },
         onPreviewEnd = { targetEndpoint?.let { HeadphoneDsp.clearCustomPreview(it.key) } },
         onSoundMode = { preset -> targetEndpoint?.let { endpoint -> execute({ HeadphonePreferences.setSoundMode(context, endpoint, preset) }) } },
         onDelete = { id -> execute({
@@ -460,8 +464,9 @@ internal fun HeadphoneEqControls(
     onAdjust: (Double, Double) -> Unit = { _, _ -> },
     onAdjustFinished: (Double, Double) -> Unit = { _, _ -> },
     onNightListening: (Boolean) -> Unit = {},
+    onQuietListening: (Double) -> Unit = {},
     onCrossfeed: (Boolean) -> Unit = {},
-    onCompare: (Boolean) -> Unit = {},
+    onModeCompare: (Boolean?) -> Unit = {},
     onPreviewEnd: () -> Unit = {},
     onDelete: (String) -> Unit = {},
     onManual: (HeadphoneProfile?) -> Unit = {},
@@ -494,13 +499,17 @@ internal fun HeadphoneEqControls(
                 if (status.binding.soundMode == SoundMode.CUSTOM) {
                     CustomSoundControls(status.endpoint?.key to profile?.id,
                         status.binding.bassDb, status.binding.trebleDb, status.binding.nightListening,
-                        enabled = canEnable, canCompare = status.active && remoteTarget == null, onAdjust = onAdjust, onAdjustFinished = onAdjustFinished, onCompare = onCompare, onPreviewEnd = onPreviewEnd)
+                        enabled = canEnable, canCompare = false, onAdjust = onAdjust, onAdjustFinished = onAdjustFinished, onPreviewEnd = onPreviewEnd)
                 }
             }
+            if (status.binding.soundMode != SoundMode.REFERENCE) ModeComparisonControls(
+                listOf(status.endpoint?.key, profile?.id, status.binding),
+                canEnable && status.active && remoteTarget == null, onModeCompare)
             NightListeningControl(status.binding.nightListening, canEnable, status.active, onNightListening)
             CrossfeedControl(status.binding.crossfeed, canEnable, status.active, onCrossfeed)
+            QuietListeningControl(status.binding.quietListening, canEnable, status.active && remoteTarget == null, onQuietListening)
             TuningDisclosure("Response curve") {
-                TuningResponseCurve(settings.bands + settings.monoBands, status.binding.soundMode, profile?.manual != null, active = status.active, previewState = tuningAudibility(status).label)
+                TuningResponseCurve(settings.bands, status.binding.soundMode, active = status.active, previewState = tuningAudibility(status).label, settings = settings)
             }
         }
         speakerControls?.invoke()
@@ -526,7 +535,7 @@ internal fun HeadphoneEqControls(
                 status.profile?.let { profile ->
                     TuningLabel("PROFILE DETAILS")
                     TuningHint(if (profile.manual != null) "Personal listening setup · independent left/right adjustments\nAutomatic headroom may reduce gain further." else "${profile.source}\nImported preamp: ${db(profile.preampDb)} dB · ${profile.bands.size} filters\nAutomatic headroom may reduce gain further.")
-                    if (profile.manual != null) TextButton(onClick = { onManual(profile) }, enabled = !busy) { Text("Edit listening setup") }
+                    if (profile.manual != null) TextButton(onClick = { onManual(profile) }, enabled = !busy) { Text("Edit personal tuning") }
                     TextButton(onClick = { deleting = profile }, enabled = !busy) { Text("Delete profile", color = MusicMateDesignTokens.Status.Destructive) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

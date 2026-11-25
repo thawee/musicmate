@@ -115,6 +115,31 @@ public class Settings {
         prefs.edit().putBoolean(Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING, prevent).apply();
     }
 
+    /** Unknown loudness is left unchanged unless the listener explicitly chooses estimated attenuation. */
+    public static String getReplayGainUntaggedPolicy(Context context) {
+        if (context == null) return "unchanged";
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(Constants.PREF_REPLAYGAIN_UNTAGGED_POLICY, "unchanged");
+    }
+
+    public static void setReplayGainUntaggedPolicy(Context context, String policy) {
+        if (context == null) return;
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putString(Constants.PREF_REPLAYGAIN_UNTAGGED_POLICY,
+                        "attenuate".equals(policy) ? "attenuate" : "unchanged").apply();
+    }
+
+    /** Explicit preset; leaves existing preferences alone until selected. */
+    public static void applyReplayGainQualityPreset(Context context) {
+        if (context == null) return;
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putString(Constants.PREF_REPLAYGAIN_MODE, "album")
+                .putFloat(Constants.PREF_REPLAYGAIN_TARGET, -18.0f)
+                .putFloat(Constants.PREF_REPLAYGAIN_PREAMP, 0.0f)
+                .putBoolean(Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING, true)
+                .putString(Constants.PREF_REPLAYGAIN_UNTAGGED_POLICY, "unchanged").apply();
+    }
+
     public static void markReplayGainTagsChanged(Context context) {
         if (context == null) return;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

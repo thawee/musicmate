@@ -1545,3 +1545,61 @@ True-peak evidence: 268 audio tests in 42 suites passed (0 failures/errors/skips
 - [x] Install update on connected Galaxy S25 without removing app data and verify installed version and launch.
 
 3.33.0 delivery: implementation/docs/version committed as 6861fb75. Audio verification: 268 tests / 42 suites, no failures/errors/skips; githubDebug assembled (log /tmp/musicmate-3.33.0-validation.log). adb install -r succeeded on Galaxy S25 (RFCY21CLTDY), installed versionName 3.33.0-261120 / versionCode 161. MainActivity launch returned Status: ok. Existing installation updated without uninstall or data clearing. Listening/CPU/DAC validation remains a separate pending follow-up above.
+
+## Optional audio analysis summary — 2026-11-25
+- [x] Inspect existing track analysis, available measurements and navigation.
+- [x] Add an Analyze audio entry with a readable summary and expandable technical details; keep fidelity findings separate and qualify sampled measurements.
+- [x] Verify focused tests, build and scoped diff against main; record runtime evidence and limitations.
+
+Validation: githubDebug assembled; six focused loudness/DR tests, ColorLiteralBudgetTest, four screenshot comparisons and two API 34 emulator UI tests passed. UI tests cover a generated tone scan, expanded peak details, fidelity callback, unreadable-file retry and close. Existing storage fixture had no decodable samples and was replaced with a generated WAV tone in the UI test. Logs: /tmp/musicmate-audio-analysis-validation.log, /tmp/musicmate-audio-analysis-checks.log, /tmp/musicmate-audio-analysis-runtime-tone.log. Scoped changes reviewed against main; unrelated branch changes preserved. No physical-phone listening or cancellation stress test performed.
+
+## DSP and ReplayGain quality review — 2026-11-25
+- [x] Inspect ReplayGain policy and DSP/playback integration.
+- [x] Run focused audio tests and review concrete risks.
+- [x] Report verified behavior, improvements and device-validation limits.
+
+Review evidence: 35 focused unit tests passed (ReplayGain 12, PCM leveling 7, DSP chain 3, true-peak limiter 7, stream gain 4, output guard 2); /tmp/musicmate-sq-review.log. Read-only code review found non-finite ReplayGain metadata can propagate NaN into playback, ReplayGain-only bypass relies on saved peak tags, and untagged tracks assume -9 LUFS. No playback code changed. Real-device underrun, listening and DAC loopback verification remain outstanding.
+
+## ReplayGain and DSP quality improvements — 2026-11-25
+- [x] Reject invalid gain/peak metadata and verify safe playback.
+- [x] Add optional ReplayGain-only true-peak protection without changing bypass behavior.
+- [x] Expose untagged-track policy and a quality preset; measure limiter intervention before changing margins.
+- [x] Run focused tests, build and emulator checks; record physical-device limits.
+
+Validation: JDK 21 githubDebug and instrumented APK builds passed; 272 app audio tests and 19 ReplayGain tests passed, plus ColorLiteralBudgetTest. API 34 emulator: preset from Off, untagged policy persistence, and both audio-analysis flows passed (three UI tests across two runs). Quiet fixtures remain exact at 44.1/48/96/192 kHz; measured conservative limiter intervention retained, documented in docs/LIMITER_MEASUREMENTS.md. Scoped diffs reviewed against HEAD and main; git diff --check clean. Logs: /tmp/musicmate-sq-final.log, /tmp/musicmate-sq-ui-check.log, /tmp/musicmate-sq-runtime.log, /tmp/musicmate-sq-analysis-runtime.log. Hardware DAC loopback, listening comparisons and sustained device underrun/CPU checks remain unverified; no claim of device-level sound-quality certification. Existing user settings change only when selecting the preset, except the new untagged policy defaults to unchanged.
+
+## DSP preset review — 2026-11-25
+- [x] Inspect sound-mode and headphone presets, headroom and compression integration.
+- [x] Verify preset-focused tests.
+- [x] Report concrete findings and useful improvements without changing preset voicing.
+
+Preset review evidence: 27 focused tests passed (SoundMode, ManualSoundMode, HeadphoneTonePreset, FiveBandHeadphoneTone, HeadphoneStereoDsp, DspChain); /tmp/musicmate-preset-review.log. No production edits. Combined EQ headroom is automatic, while headphone profile tone and playback mode deliberately stack. Manual Vocal uses 1 kHz whereas playback Vocal uses 2.5 kHz; headphone V-shape boosts bass and treble by 5 dB. Recommend clearer layering and naming, optional gentler variants and combined-preset/sample-rate sweeps. Existing tests establish behavior, not subjective listening quality.
+
+## DSP preset improvements — 2026-11-25
+- [x] Add gentle V-shape and distinguish Vocal preset descriptions.
+- [x] Show combined EQ/headroom and provide attenuation-only matched comparison for modes.
+- [x] Test combined profiles and modes across sample rates, build and verify UI.
+
+Preset improvement evidence: added Gentle V (+2.5/−1/+2.5 dB), clarified the two Vocal tunings, per-ear combined EQ preview and headroom at 48 kHz, and transient attenuation-only mode comparison in quick/full tuning. Existing preset voicing retained. Comparison estimates pink-spectrum EQ energy, not song loudness, and retains Night/crossfeed. Added combined preset/mode sweeps at 44.1/48/96/192 kHz, comparison energy/PCM tests, route/bypass/consent lifecycle tests, and emulator UI lifecycle tests. Final validation: 284 app audio tests, 19 ReplayGain tests, 3 emulator comparison UI tests passed; debug app and Android test APK builds passed; git diff --check clean. Logs: /tmp/musicmate-presets-all-audio.log, /tmp/musicmate-presets-final.log, /tmp/musicmate-mode-lifecycle.log, /tmp/musicmate-mode-comparison-final-ui.log. Reviewed branch differences against main; no commit or push. Physical device listening remains necessary to judge subjective sound quality.
+
+## MateTune branding — 2026-11-25
+- [x] Rebrand navigation, quick/full tuning, accessibility labels and related copy.
+- [x] Update guide and existing UI assertions for MateTune.
+- [x] Build and verify branded navigation and tuning controls on emulator.
+
+MateTune evidence: navigation, quick/full panel titles, enable/USB controls, accessibility labels, personal tuning and calibration guidance rebranded. Updated user guide and UI assertions; stored keys and DSP behavior retained. Debug app and Android test APK builds passed. Emulator: 14 QuickTuningUiTest, 5 AudioTuningSheetUiTest (including large text and actual body swipes), and 1 drawer navigation test passed. Logs: /tmp/musicmate-matetune-verify-build.log, /tmp/musicmate-matetune-quick-ui-final.log, /tmp/musicmate-matetune-sheet-ui-final.log, /tmp/musicmate-matetune-drawer-ui.log. Reviewed relevant differences against main; git diff --check clean. No commit or push.
+
+## Quiet listening — 2026-11-25
+- [x] Add bounded manual compensation, persisted per output, and combine with existing correction/headroom.
+- [x] Add independent MateTune control and update guidance.
+- [x] Verify DSP response, persistence/gates, build and emulator controls.
+
+Quiet listening evidence: added default-off manual strength, gentle bass/treble shelves, persisted output settings, and combined EQ headroom. Independent of ReplayGain, Night listening, crossfeed and sound mode; existing bypass and USB consent remain enforced. Debug app and Android test APK builds passed. All 292 audio unit tests and 22 emulator UI tests passed (3 Quiet listening, 14 quick controls, 5 sheet/scrolling). Logs: /tmp/musicmate-quiet-unit-final.log, /tmp/musicmate-quiet-build.log, /tmp/musicmate-quiet-ui.log, /tmp/musicmate-quiet-quick-ui.log, /tmp/musicmate-quiet-sheet-ui.log. Relevant changes reviewed; git diff --check clean. No commit or push. Subjective listening on physical outputs remains unverified.
+
+## Release 3.34.0 — 2026-11-25
+- [x] Review pending scope, update version 162 and release documentation.
+- [x] Verify core/audio tests and optimized GitHub APK build/runtime.
+- [ ] Commit release changes and push branch plus v3.34.0 tag.
+- [ ] Verify GitHub workflow and published signed APK.
+
+Release verification: :app:assembleGithubRelease, :app:testGithubDebugUnitTest and :core:testDebugUnitTest passed (300 app + 291 core tests, no failures/errors). Log: /tmp/musicmate-3.34.0-release-check.log. Local optimized APK signed with the emulator debug certificate for smoke testing; matching installed certificate verified before update, MANAGE_EXTERNAL_STORAGE present. Emulator update succeeded without uninstall/data clearing; cold launch Status ok, drawer shows v3.34.0, MateTune opens with Night listening and Quiet listening; crash buffer empty. Production signing is performed by the tag-triggered GitHub workflow. Existing 22 tuning UI tests remain passing. Unrelated .claude/, .trail/ and graft/ excluded.

@@ -79,7 +79,7 @@ internal fun CustomSoundControls(
                 comparing = false; comparisonCallback(false); bass = 0.0; treble = 0.0
                 onAdjust(0.0, 0.0); onAdjustFinished(0.0, 0.0)
             }, enabled = enabled, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Reset") }
-            TextButton(onClick = { comparing = !comparing }, enabled = enabled && canCompare,
+            if (canCompare) TextButton(onClick = { comparing = !comparing }, enabled = enabled && canCompare,
                 modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                 Text(if (comparing) "Back to Custom" else "Compare")
             }

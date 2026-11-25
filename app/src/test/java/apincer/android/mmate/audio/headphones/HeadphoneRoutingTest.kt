@@ -6,6 +6,7 @@ import apincer.android.mmate.audio.dsp.CarDsp
 import apincer.android.mmate.audio.dsp.CarDspSettings
 import apincer.android.mmate.audio.dsp.DspChain
 import apincer.android.mmate.audio.dsp.PeqBand
+import apincer.android.mmate.audio.dsp.QuietListening
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.After
@@ -13,6 +14,79 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class HeadphoneRoutingTest {
+    @Test fun quietListeningKeepsRouteConsentAndBypassGatesAndReferenceComparison() {
+        val endpoint = HeadphoneEndpoint.of(listOf(usb))!!
+        HeadphoneDsp.updateDevices(listOf(usb))
+        val binding = HeadphoneBinding(profile.id, enabled = true, usbEqAllowed = true,
+            soundMode = SoundMode.LIVELY, quietListening = 0.5, nightListening = true, crossfeed = true)
+        bind(endpoint, binding)
+        HeadphoneDsp.setModeComparison(endpoint.key, true)
+        assertEquals(profile.bands + QuietListening.bands(0.5),
+            HeadphoneDsp.current.settings!!.bands)
+        assertTrue(HeadphoneDsp.current.settings!!.compress)
+        assertTrue(HeadphoneDsp.current.settings!!.crossfeed)
+        for (blocked in listOf(binding.copy(enabled = false), binding.copy(usbEqAllowed = false),
+                binding.copy(profileId = "missing"))) {
+            bind(endpoint, blocked)
+            assertNull(HeadphoneDsp.current.settings)
+        }
+        bind(endpoint, binding.copy(profileId = null, soundMode = SoundMode.REFERENCE))
+        assertEquals(QuietListening.bands(0.5), HeadphoneDsp.current.settings!!.bands)
+    }
+
+    @Test
+    fun modeComparisonRestoresOriginalAndClearsOnRouteAndSettingsChanges() {
+        val endpoint = HeadphoneEndpoint.of(listOf(bluetooth))!!
+        val binding = HeadphoneBinding(profile.id, enabled = true, soundMode = SoundMode.LIVELY,
+            nightListening = true, crossfeed = true)
+        bind(endpoint, binding)
+        HeadphoneDsp.updateDevices(listOf(bluetooth))
+        val original = HeadphoneDsp.current.settings!!
+        HeadphoneDsp.setModeComparison(endpoint.key, true)
+        val correction = HeadphoneDsp.current.settings!!
+        assertEquals(profile.bands, correction.bands)
+        assertTrue(correction.compress)
+        assertTrue(correction.crossfeed)
+        assertEquals(binding, HeadphoneDsp.state.value.binding)
+        HeadphoneDsp.setModeComparison("unknown", false)
+        assertSame(correction, HeadphoneDsp.current.settings)
+        HeadphoneDsp.setModeComparison("unknown", null)
+        assertSame(correction, HeadphoneDsp.current.settings)
+        HeadphoneDsp.setModeComparison(endpoint.key, false)
+        assertEquals(original.bands, HeadphoneDsp.current.settings!!.bands)
+        HeadphoneDsp.setModeComparison(endpoint.key, null)
+        assertSettingsEqual(original, HeadphoneDsp.current.settings)
+        HeadphoneDsp.setModeComparison(endpoint.key, true)
+        HeadphoneDsp.updateDevices(emptyList())
+        HeadphoneDsp.updateDevices(listOf(bluetooth))
+        assertSettingsEqual(original, HeadphoneDsp.current.settings)
+        HeadphoneDsp.setModeComparison(endpoint.key, true)
+        val changed = binding.copy(soundMode = SoundMode.VOCAL, nightListening = false)
+        bind(endpoint, changed)
+        assertSettingsEqual(HeadphoneDsp.settingsFor(profile, changed), HeadphoneDsp.current.settings)
+    }
+
+    @Test
+    fun modeComparisonCannotEnableDisabledOrUnconsentedUsbCorrection() {
+        val endpoint = HeadphoneEndpoint.of(listOf(usb))!!
+        HeadphoneDsp.updateDevices(listOf(usb))
+        for (binding in listOf(
+            HeadphoneBinding(profile.id, enabled = false, usbEqAllowed = true, soundMode = SoundMode.LIVELY),
+            HeadphoneBinding(profile.id, enabled = true, usbEqAllowed = false, soundMode = SoundMode.LIVELY)
+        )) {
+            bind(endpoint, binding)
+            for (comparison in listOf(true, false, null)) {
+                HeadphoneDsp.setModeComparison(endpoint.key, comparison)
+                assertNull(HeadphoneDsp.current.settings)
+                assertFalse(HeadphoneDsp.state.value.active)
+            }
+        }
+        val enabled = HeadphoneBinding(profile.id, enabled = true, usbEqAllowed = true,
+            soundMode = SoundMode.LIVELY)
+        bind(endpoint, enabled)
+        assertSettingsEqual(HeadphoneDsp.settingsFor(profile, enabled), HeadphoneDsp.current.settings)
+    }
+
     private fun assertSettingsEqual(expected: CarDspSettings?, actual: CarDspSettings?) {
         requireNotNull(expected)
         requireNotNull(actual)

@@ -44,6 +44,9 @@ fun SettingsScreen(
     onReplayGainPreampChange: (Float) -> Unit = {},
     replayGainPreventClipping: Boolean = true,
     onReplayGainPreventClippingChange: (Boolean) -> Unit = {},
+    replayGainUntaggedPolicy: String = "unchanged",
+    onReplayGainUntaggedPolicyChange: (String) -> Unit = {},
+    onReplayGainQualityPreset: () -> Unit = {},
     measureLoudnessWhileCharging: Boolean = false,
     onMeasureLoudnessWhileChargingChange: (Boolean) -> Unit = {},
     tapActionMode: String = "listen",
@@ -209,7 +212,25 @@ fun SettingsScreen(
                         checked = replayGainPreventClipping,
                         onCheckedChange = onReplayGainPreventClippingChange
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(stringResource(R.string.leveling_untagged_title), color = Color.White,
+                        fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.leveling_untagged_summary),
+                        color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
+                    AdaptiveChoiceGroup(
+                        options = listOf(
+                            "unchanged" to stringResource(R.string.leveling_untagged_unchanged),
+                            "attenuate" to stringResource(R.string.leveling_untagged_estimate)
+                        ),
+                        selected = { replayGainUntaggedPolicy == it },
+                        onSelect = onReplayGainUntaggedPolicyChange
+                    )
                 }
+                TextButton(onClick = onReplayGainQualityPreset) {
+                    Text(stringResource(R.string.leveling_quality_preset))
+                }
+                Text(stringResource(R.string.leveling_quality_preset_summary),
+                    color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
 
                 Spacer(modifier = Modifier.height(12.dp))
                 SettingsSwitchRow(

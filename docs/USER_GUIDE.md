@@ -141,20 +141,20 @@ The list keeps updating while it is open, so a player that has just been switche
 
 If a network player refuses a song, for example a format it cannot play, MusicMate skips to the next one. After three refusals in a row it stops and leaves the queue as it is.
 
-### Speaker Tuning
+### MateTune
 
-Speaker Tuning corrects how your car or a Bluetooth speaker sounds when MusicMate plays on this phone. It is never applied to a USB DAC, and it does nothing for DLNA players.
+MateTune brings sound modes, headphone and speaker correction, and personal tuning together. It processes playback on this phone; it does not process playback on DLNA players. USB EQ requires your explicit choice for that DAC.
 
-- **Tune a speaker.** Tap the tuning chip in Now Playing, then **Tune a speaker**, or use **Settings, Speaker Tuning**. Play through the car (Android Auto) or the speaker, sit where you usually listen, and follow the steps: a 10-second sweep plays at five spots around your head while the phone listens. In a car, park with the engine off or idling. Set the car's or speaker's own EQ to flat first. On phones that only offer the voice microphone the result is marked approximate.
+- **Tune a speaker.** Tap the MateTune chip in Now Playing, open **Manage MateTune**, then **Tune a speaker**, or use **MateTune** in the navigation drawer. Play through the car (Android Auto) or the speaker, sit where you usually listen, and follow the steps: a 10-second sweep plays at five spots around your head while the phone listens. In a car, park with the engine off or idling. Set the car's or speaker's own EQ to flat first. On phones that only offer the voice microphone the result is marked approximate.
 - **Pick a sound mode.** The chip shows the active speaker and mode, for example *MU-X · DRIVE*. Tap it to choose a mode, or to turn tuning off: **Reference** (the tuning target with nothing added, the audiophile choice), **Bass**, **Vocal**, **Drive**, **Relax** (softer highs, warm), **Focus** (voices set back for work or study), **Sleep** (soft treble, and loud moments are turned down so they don't wake you) or **Custom** (your own bass and treble, up to 4 dB each). Every mode works on every speaker. Each speaker remembers its own mode.
 - **Several cars and speakers.** Each one you tune is listed in the dialog; tap one to switch. MusicMate follows where the music plays: a Bluetooth speaker's tuning turns on when music plays through that speaker, and a car's tuning turns on when music plays through Android Auto in that car. On the phone speaker, headphones or anything not tuned, **No correction** returns, so an EQ never follows you elsewhere. A speaker you pick by hand stays until the music moves to another output. To be recognised in Android Auto, tune the car while Android Auto is playing. With two tuned cars, MusicMate tells them apart by the Bluetooth link each car makes when the drive starts, so allow MusicMate's Nearby devices permission.
-- **Headphones.** The phone's microphone cannot measure headphones, so don't tune them.
+- **Headphones.** Use **Personal tuning** to adjust by listening, or import a correction profile for your exact model. The phone's microphone cannot measure headphones.
 
 ### Crossfeed and the Limiting light
 
 - **Crossfeed.** In headphone tuning, **Crossfeed** blends a little of each side into the other, the way each ear hears both speakers in a room. Hard-panned old stereo recordings sound less tiring. It works on Bluetooth headphones and, once you allow processing, on a USB DAC, while tuning is on for that output. Each output remembers it. The tuning chip shows *Crossfeed* next to the profile while it is on.
 - **Limiting.** While tuning is on, the tuning chip shows **Limiting** for a few seconds when MusicMate turned a peak down by more than 1 dB to keep it from distorting. A moment now and then is harmless. If it keeps lighting up with a bass boost or a high Pre-Amp Gain, lower one of them.
-- **Peak protection.** Tuning looks slightly ahead to catch peaks between digital samples and turns both channels down together to keep the stereo balance. This adds about 6 ms at 48 kHz. Very loud recordings may play a little quieter; quieter passages are unchanged by the limiter. If loud passages sound flattened or seem to pump, reduce the EQ boost or Pre-Amp Gain. The protection applies while tuning is active; volume leveling alone does not engage it.
+- **Peak protection.** Tuning looks slightly ahead to catch peaks between digital samples and turns both channels down together to keep the stereo balance. This adds about 6 ms at 48 kHz. Very loud recordings may play a little quieter; quieter passages are unchanged by the limiter. If loud passages sound flattened or seem to pump, reduce the EQ boost or Pre-Amp Gain. The protection applies while tuning is active, and also with tuning off when volume leveling and Prevent Clipping are enabled. The leveling controls show peak reduction in dB when protection intervenes.
 - **Clipping.** The chip shows **Clipping** in red when a peak went past full scale and had to be cut. Lower the Pre-Amp Gain or turn on Prevent Clipping.
 
 ---
@@ -198,6 +198,7 @@ Press and hold a song to open its details. The screen shows the cover, quality a
 - **Add to Playlist…**
 - **Search & Match Tags** looks the song up on MusicBrainz. Matches become unsaved edits you can review before saving.
 - **Smart Clean & Format**
+- **Analyze audio** shows the library DR measurement and scans the whole track for loudness (LUFS) and true peak. Open **Technical details** for the peak level and measurement notes. Peaks reaching full scale flag possible clipping; lower peaks do not prove an earlier master was unclipped. **Verify lossless source** opens the separate file-fidelity check. Analysis does not change the file or its tags; closing the screen cancels its scan.
 - **Verify Lossless Quality** checks the top of the frequency spectrum for the marks that upsampling and lossy encoding leave. "Upsampled from 44.1 kHz" (or 48 kHz) means a hi-res file stops sharply at the CD (or 48 kHz) limit; "Lossy source" means the sound is cut off lower, as MP3 and AAC encoders do. "No sign of upsampling" and "No lossy cutoff found" mean neither mark was found, which does not prove a file is genuine: high-bitrate AAC can leave no mark, and many real recordings have little above 20 kHz. "Can't tell" means there is too little high-frequency sound to judge. MusicMate Pro adds the spectrum picture and the measurements.
 - **Show in File Manager**
 - **Search Song on Web**
@@ -255,12 +256,13 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
   - **Play tracks** (default): tap plays, and press and hold opens the details.
   - **Edit tags**: tap opens the details, and press and hold starts selecting several songs.
 - **Loudness Leveling Mode** evens out volume between songs using ReplayGain or EBU R128 tags. **Track** levels every song. **Album** keeps the loudness differences within an album.
-  - **Target loudness** sets how loud leveled songs play. **−14 LUFS, streaming** (the default) matches streaming services and turns loud songs down less. **−18 LUFS, ReplayGain** is the ReplayGain standard and leaves more headroom. Songs without ReplayGain tags are turned down to about the target.
+  - **Target loudness** sets how loud leveled songs play. **−14 LUFS, streaming** (the default) matches streaming services and turns loud songs down less. **−18 LUFS, ReplayGain** is the ReplayGain standard and leaves more headroom. For songs without valid ReplayGain tags, **Tracks without ReplayGain** defaults to **Leave unchanged**. **Estimate attenuation** instead assumes a −9 LUFS master and only turns it down; measuring loudness gives an accurate gain. Invalid or nonfinite gain tags are ignored.
+  - **Use quality preset** selects Album mode, −18 LUFS, 0 dB preamp, clipping protection on, and untagged tracks unchanged. It changes settings only when tapped.
   - **Pre-Amp Gain** raises or lowers the result.
-  - **Prevent Clipping** stops loud peaks from distorting. With it on, a quiet song can also be raised, until its loudest peak reaches full scale.
-  - MusicMate applies leveling to the audio itself, before any headphone or car tuning, and keeps Android's volume at full. 16-bit songs are sent to Android as 24-bit, so leveling adds no rounding noise.
+  - **Prevent Clipping** uses saved peak tags to limit gain and a live true-peak limiter to catch peaks, even with tuning off. It may reduce loud passages. This protects MusicMate’s output; later device processing can still distort.
+  - MusicMate applies leveling to the audio itself, before any headphone or car tuning, and keeps Android's volume at full. 16-bit songs are sent to Android as 24-bit to reduce rounding error when gain changes.
   - **Measure loudness while charging** writes ReplayGain tags into songs that have none, in hourly runs while the phone charges. To tag songs now, select them (with **Edit tags** as the tap action) and choose **Measure loudness** from the selection menu. Selecting a whole album also writes album gain.
-- **Speaker Tuning** lists the cars and speakers you have tuned, with the date and how the check went. Choose the active one, rename one with the pencil button (its Bluetooth name stays visible underneath), delete one, or tune another. See [Speaker Tuning](#speaker-tuning).
+- **MateTune** lists the cars and speakers you have tuned, with the date and how the check went. Choose the active one, rename one with the pencil button (its Bluetooth name stays visible underneath), delete one, or tune another. See [MateTune](#matetune).
 - **Display options.**
   - Show storage use in the menu.
   - Show track numbers before titles.
@@ -288,3 +290,20 @@ The [Music Quality Guide](MUSIC_QUALITY_GUIDE.md) explains bit depth, sample rat
 **The app will not install from GitHub.** Releases before 3.24.0 were unsigned and cannot be installed. If you have MusicMate from another source, uninstall it once and install the latest release. Uninstalling removes the library and settings, so plan to rescan.
 
 **Something crashed.** Open **Diagnostics** from the menu and include what it shows when you report the problem.
+
+### Comparing DSP presets
+
+- **Gentle V** offers a lighter headphone contour: +2.5 dB bass and treble, −1 dB mids. The existing V-shape remains available.
+- The headphone **Vocal** preset adds vocal body around 1 kHz. The playback **Vocal** mode adds presence around 2.5 kHz. These adjustments combine when both are selected.
+- **Compare levels** switches between your selected mode and correction alone. Both use the quieter estimated level, so comparison never adds gain. This is a 48 kHz pink-spectrum EQ estimate, not a measurement of the song’s loudness. Night listening and crossfeed stay selected. Ending comparison, changing settings or outputs, dismissing tuning, or backgrounding the app restores normal playback settings.
+- **Response curve** shows the combined correction and sound mode for each ear (gold left, grey right), plus headroom attenuation. The curve previews EQ at 48 kHz before headroom and balance; crossfeed and Night listening are not plotted. Actual playback calculates headroom at the output sample rate.
+
+### Opening MateTune
+
+Tap the MateTune equalizer shortcut in Now Playing for **MateTune · Quick**. Use **Manage MateTune** to open the full module, or choose **MateTune** from the navigation drawer. **Sound modes** choose a playback character; **Personal tuning** creates your own listening adjustments. Rebranding does not change saved profiles, presets, or audio processing.
+
+### Quiet listening
+
+In MateTune, enable **Quiet listening** when music sounds thin at a low listening volume. Adjust **Strength** for gentle bass and treble compensation; switching it on starts at 50%. It is off by default and saved for the output. At full strength it adds a 4 dB bass shelf around 100 Hz and a 1 dB treble shelf around 6 kHz, with automatic EQ headroom protection.
+
+This is a manual tone adjustment: MusicMate cannot infer acoustic listening volume from the phone or an external amplifier. Reduce strength or turn it off at higher volumes. ReplayGain still levels tracks, while **Night listening** reduces loud passages; both work independently of Quiet listening. MateTune bypass and USB consent still apply.

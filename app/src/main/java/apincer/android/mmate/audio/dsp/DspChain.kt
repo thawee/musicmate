@@ -53,6 +53,10 @@ class DspChain(
     /** Combined gain of the shared bands in dB at [frequencyHz]. */
     fun responseDb(frequencyHz: Double): Double = filters.sumOf { it.magnitudeDb(frequencyHz, sampleRate) }
 
+    /** Per-channel EQ response before preamp and balance. */
+    internal fun channelResponseDb(frequencyHz: Double, channel: Int): Double =
+        channelFilters[channel].sumOf { it.magnitudeDb(frequencyHz, sampleRate) }
+
     /** Filters one interleaved frame in place. */
     fun process(frame: DoubleArray) {
         crossfeedFilter?.process(frame)

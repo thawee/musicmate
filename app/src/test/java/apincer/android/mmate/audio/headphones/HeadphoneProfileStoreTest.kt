@@ -15,6 +15,29 @@ class HeadphoneProfileStoreTest {
 
     private fun profile() = HeadphoneProfileParser.parse("Preamp: -5.5 dB\nFilter 1: ON PK Fc 1000 Hz Gain -3 dB Q 1.4", "HD 600", "AutoEq.txt")
 
+    @Test fun quietListeningDefaultsOffAndPersistsPerEndpointWithNormalization() {
+        val file = File(folder.root, "quiet.json")
+        val store = HeadphoneProfileStore(file)
+        file.writeText("""{"bindings":{"wired":{"enabled":true}}}""")
+        assertEquals(0.0, store.load().bindings.getValue("wired").quietListening, 0.0)
+        val bindings = mapOf(
+            "wired" to HeadphoneBinding(quietListening = 0.5, nightListening = true, crossfeed = true),
+            "bt:AA" to HeadphoneBinding(quietListening = 1.0),
+            "usb:dac" to HeadphoneBinding(quietListening = 0.0))
+        store.save(HeadphoneLibrary(bindings = bindings))
+        assertEquals(bindings, HeadphoneProfileStore(file).load().bindings)
+        store.save(HeadphoneLibrary(bindings = mapOf(
+            "wired" to HeadphoneBinding(quietListening = Double.NaN),
+            "bt:AA" to HeadphoneBinding(quietListening = 4.0))))
+        assertEquals(0.0, store.load().bindings.getValue("wired").quietListening, 0.0)
+        assertEquals(1.0, store.load().bindings.getValue("bt:AA").quietListening, 0.0)
+        file.writeText("""{"bindings":{"wired":{"quietListening":-2.0},"bt:AA":{"quietListening":7.0}}}""")
+        val normalized = store.load()
+        assertEquals(0.0, normalized.bindings.getValue("wired").quietListening, 0.0)
+        assertEquals(1.0, normalized.bindings.getValue("bt:AA").quietListening, 0.0)
+        assertEquals(normalized, store.load())
+    }
+
     @Test fun legacyModesMigrateWithoutLosingOtherBindingsOrUserSettings() {
         val file = File(folder.root, "legacy.json")
         file.writeText("""{"bindings":{

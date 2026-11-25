@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.34.0] - 2026-11-25
+
+### Added
+- **Quiet listening:** Default-off manual loudness compensation with adjustable bass/treble strength, saved output settings and combined EQ headroom protection. Independent of ReplayGain, Night listening, crossfeed and sound modes; existing bypass and USB consent apply.
+- **Preset tools:** Gentle V tuning, combined per-ear EQ/headroom previews, and attenuation-only sound-mode comparison with estimated level matching.
+- **Audio analysis:** Updated fidelity/mastering presentation with expandable peak details and unreadable-file retry.
+
+### Changed
+- **MateTune:** Renamed tuning controls, navigation, accessibility labels and guidance.
+- **Volume leveling and DSP:** Improved ReplayGain integration, peak protection and transition handling; added response, limiter and routing regression coverage.
+- **Preset guidance:** Clarified Vocal tuning descriptions and how correction and sound modes combine.
+
+### Validation
+- 300 app and 291 core unit tests passed, with 22 tuning emulator UI tests from feature validation. Optimized GitHub APK built and passed emulator startup/MateTune navigation checks; details recorded in tasks/todo.md. Physical-device listening and DAC loopback checks remain pending; automated measurements do not establish audible superiority.
+
 ## [3.33.0] - 2026-11-20
 
 ### Changed

@@ -789,6 +789,12 @@ public class TagsActivity extends AppCompatActivity {
             } else if (itemId == R.id.action_smart_clean_format) {
                 doFullCleanPipeline();
                 return true;
+            } else if (itemId == R.id.action_analyze_audio) {
+                if (!getEditItems().isEmpty()) {
+                    apincer.android.mmate.ui.compose.AudioAnalysisDialog.show(
+                            this, getEditItems().get(0), this::doShowSpectrum);
+                }
+                return true;
             } else if (itemId == R.id.action_spectrum) {
                 doShowSpectrum();
                 return true;

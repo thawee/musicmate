@@ -50,12 +50,12 @@ class MainLibraryAccessibilityTest {
                 MainScaffold(rememberDrawerState(DrawerValue.Open), state = state, showGestureHints = false)
             }
         }
-        composeRule.onNodeWithText("Audio tuning").performScrollTo()
+        composeRule.onNodeWithText("MateTune").performScrollTo()
         val settingsBounds = composeRule.onNodeWithText("Settings").fetchSemanticsNode().boundsInRoot
-        val tuningBounds = composeRule.onNodeWithText("Audio tuning").fetchSemanticsNode().boundsInRoot
+        val tuningBounds = composeRule.onNodeWithText("MateTune").fetchSemanticsNode().boundsInRoot
         org.junit.Assert.assertTrue(tuningBounds.top > settingsBounds.bottom)
-        composeRule.onNodeWithText("Audio tuning").performClick()
-        composeRule.onNodeWithContentDescription("Close audio tuning").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("MateTune").performClick()
+        composeRule.onNodeWithContentDescription("Close MateTune").assertIsDisplayed().performClick()
         composeRule.onNodeWithContentDescription("MusicMate Menu").assertIsDisplayed()
     }
 

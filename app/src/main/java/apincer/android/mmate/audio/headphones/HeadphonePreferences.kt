@@ -95,6 +95,12 @@ object HeadphonePreferences {
     }
 
     @Synchronized
+    fun setQuietListening(context: Context, endpoint: HeadphoneEndpoint, strength: Double) = update(context) {
+        val old = it.bindings[endpoint.key] ?: HeadphoneBinding()
+        it.copy(bindings = it.bindings + (endpoint.key to old.copy(quietListening = strength).normalized()))
+    }
+
+    @Synchronized
     fun delete(context: Context, id: String) = update(context) { saved ->
         saved.copy(
             profiles = saved.profiles.filterNot { it.id == id },
@@ -106,7 +112,8 @@ object HeadphonePreferences {
 
     private fun update(context: Context, change: (HeadphoneLibrary) -> HeadphoneLibrary) {
         init(context)
-        val next = change(library.value)
+        val changed = change(library.value)
+        val next = changed.copy(bindings = changed.bindings.mapValues { it.value.normalized() })
         store(context).save(next)
         library.value = next
         HeadphoneDsp.updateLibrary(next)

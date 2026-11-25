@@ -1,6 +1,7 @@
 package apincer.android.mmate.audio.headphones
 
 import apincer.android.mmate.audio.dsp.PeqBand
+import apincer.android.mmate.audio.dsp.QuietListening
 import apincer.android.mmate.audio.dsp.SoundMode
 import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.calibration.CalibrationMethod
@@ -40,13 +41,16 @@ data class HeadphoneBinding(
     /** Legacy files default to Custom so their saved trims retain their sound. */
     val soundMode: SoundMode = SoundMode.CUSTOM,
     val nightListening: Boolean = false,
-    val crossfeed: Boolean = false
+    val crossfeed: Boolean = false,
+    val quietListening: Double = 0.0
 ) {
+    internal fun normalized(): HeadphoneBinding = copy(quietListening = QuietListening.normalize(quietListening))
+
     /** Bass migration keeps its shelf approximately; its old mid cut is intentionally retired. */
     internal fun migrated(): HeadphoneBinding = when (soundMode) {
-        SoundMode.NIGHT -> copy(soundMode = SoundMode.REFERENCE, nightListening = true)
-        SoundMode.BASS -> copy(soundMode = SoundMode.CUSTOM, bassDb = 4.0)
-        else -> this
+        SoundMode.NIGHT -> copy(soundMode = SoundMode.REFERENCE, nightListening = true).normalized()
+        SoundMode.BASS -> copy(soundMode = SoundMode.CUSTOM, bassDb = 4.0).normalized()
+        else -> normalized()
     }
 }
 

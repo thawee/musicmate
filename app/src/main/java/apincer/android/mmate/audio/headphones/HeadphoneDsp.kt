@@ -8,6 +8,7 @@ import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.UsbOutputFormat
 import apincer.android.mmate.audio.dsp.CarDspSettings
 import apincer.android.mmate.audio.dsp.SoundMode
+import apincer.android.mmate.audio.dsp.QuietListening
 import apincer.android.mmate.audio.dsp.CarDspPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -76,12 +77,23 @@ object HeadphoneDsp {
     val state: StateFlow<HeadphoneStatus> = status
     private var devices = emptyList<Triple<Int, String?, String?>>()
     private var library = HeadphoneLibrary()
+    private var modeComparison: Pair<String, Boolean>? = null
+
+    @Synchronized
+    fun setModeComparison(endpointKey: String, hearCorrection: Boolean?) {
+        if (status.value.endpoint?.key != endpointKey) return
+        comparisonEndpoint = null
+        modeComparison = hearCorrection?.let { endpointKey to it }.takeIf { status.value.active }
+        publish()
+    }
+
     private var comparisonEndpoint: String? = null
     private var preview: Pair<String, HeadphoneBinding>? = null
 
     @Synchronized
     fun setCustomComparison(endpointKey: String, comparing: Boolean) {
         if (status.value.endpoint?.key != endpointKey) return
+        modeComparison = null
         comparisonEndpoint = endpointKey.takeIf { comparing && status.value.active && status.value.binding.soundMode == SoundMode.CUSTOM }
         publish()
     }
@@ -101,6 +113,7 @@ object HeadphoneDsp {
         val binding = library.bindings[endpointKey] ?: return
         preview = endpointKey to binding.copy(soundMode = SoundMode.CUSTOM,
             bassDb = bassDb.coerceIn(-6.0, 6.0), trebleDb = trebleDb.coerceIn(-6.0, 6.0))
+        modeComparison = null
         comparisonEndpoint = null
         publish()
     }
@@ -114,6 +127,7 @@ object HeadphoneDsp {
     @Synchronized
     internal fun updateDevices(next: List<Triple<Int, String?, String?>>) {
         if (devices == next) return
+        modeComparison = null
         comparisonEndpoint = null
         preview = null
         CarDspPreferences.onRouteChanged()
@@ -123,7 +137,8 @@ object HeadphoneDsp {
 
     @Synchronized
     fun updateLibrary(next: HeadphoneLibrary) {
-        if (library == next && comparisonEndpoint == null && preview == null) return
+        if (library == next && comparisonEndpoint == null && modeComparison == null && preview == null) return
+        modeComparison = null
         comparisonEndpoint = null
         preview = null
         library = next
@@ -137,7 +152,11 @@ object HeadphoneDsp {
         val handles = endpoint != null && (endpoint.usb || endpoint.wired || binding != null)
         val active = handles && binding?.enabled == true && (binding.profileId == null || profile != null) && (!endpoint.usb || binding.usbEqAllowed)
         val comparing = active && comparisonEndpoint == endpoint?.key && binding?.soundMode == SoundMode.CUSTOM
-        val settings = if (active) settingsFor(profile, binding!!, comparing) else null
+        val selected = if (active) settingsFor(profile, binding!!, comparing) else null
+        val match = modeComparison?.takeIf { it.first == endpoint?.key }
+        val settings = if (selected != null && match != null)
+            apincer.android.mmate.audio.dsp.ModeLevelMatch.select(selected,
+                settingsFor(profile, binding!!.copy(soundMode = SoundMode.REFERENCE)), match.second) else selected
         selection = Selection(handles, settings, devices.isNotEmpty() && devices.none { UsbOutputFormat.isUsbType(it.first) })
         status.value = HeadphoneStatus(endpoint, binding ?: HeadphoneBinding(), profile, active, comparing)
     }
@@ -150,7 +169,7 @@ object HeadphoneDsp {
         } else mode.bands()
         val correction = profile?.manual?.settings()
             ?: CarDspSettings(profile?.bands.orEmpty(), requestedPreampDb = profile?.preampDb ?: 0.0)
-        return CarDspSettings(correction.bands + personal, compress = binding.nightListening,
+        return CarDspSettings(correction.bands + personal + QuietListening.bands(binding.quietListening), compress = binding.nightListening,
             requestedPreampDb = correction.requestedPreampDb, leftBands = correction.leftBands,
             rightBands = correction.rightBands, balanceDb = correction.balanceDb, monoBands = correction.monoBands,
             crossfeed = binding.crossfeed)

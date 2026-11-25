@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import apincer.android.mmate.R
 import apincer.android.mmate.audio.calibration.CalibrationOutput
 
@@ -46,16 +47,16 @@ internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = f
         Column(Modifier.fillMaxWidth().then(if (compact) Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.86f) else Modifier.fillMaxHeight(0.94f))) {
             Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(if (compact) "Quick tuning" else "Audio tuning", Modifier.weight(1f),
+                Text(stringResource(if (compact) R.string.matetune_quick_title else R.string.nav_audio_tuning), Modifier.weight(1f),
                     fontSize = 22.sp, fontWeight = FontWeight.Medium)
                 onManage?.let { manage ->
                     IconButton(onClick = manage) {
-                        Icon(painterResource(R.drawable.ic_round_settings_24), "Manage tuning",
+                        Icon(painterResource(R.drawable.ic_round_settings_24), stringResource(R.string.matetune_manage),
                             tint = MusicMateDesignTokens.Text.Secondary)
                     }
                 }
                 IconButton(onClick = onDismissRequest) {
-                    Icon(painterResource(R.drawable.round_close_24), if (compact) "Close quick tuning" else "Close audio tuning",
+                    Icon(painterResource(R.drawable.round_close_24), stringResource(if (compact) R.string.matetune_close_quick else R.string.matetune_close),
                         tint = MusicMateDesignTokens.Text.Secondary)
                 }
             }
@@ -136,15 +137,23 @@ internal fun TuningAction(title: String, description: String, enabled: Boolean =
 }
 
 @Composable
-internal fun TuningResponseCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, mode: apincer.android.mmate.audio.dsp.SoundMode, averageEars: Boolean = false, active: Boolean = true, previewState: String = "Bypassed") {
+internal fun TuningResponseCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, mode: apincer.android.mmate.audio.dsp.SoundMode, averageEars: Boolean = false, active: Boolean = true, previewState: String = "Bypassed", settings: apincer.android.mmate.audio.dsp.CarDspSettings? = null) {
     Surface(color = MusicMateDesignTokens.Surfaces.Surface, shape = RoundedCornerShape(16.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TuningLabel("EQ CURVE")
                 Text(if (active) "${mode.label} mode" else "Preview · ${mode.label} · $previewState", color = MusicMateDesignTokens.Text.Secondary, fontSize = 12.sp)
             }
-            CorrectionCurve(bands)
-            TuningHint(if (averageEars) "Correction + sound mode · average of left and right" else "Correction + sound mode · 20 Hz–20 kHz")
+            CorrectionCurve(bands, settings = settings)
+            if (settings != null) {
+                val preamp = androidx.compose.runtime.remember(settings) {
+                    apincer.android.mmate.audio.dsp.DspChain(settings.bands, 48_000, 2,
+                        settings.requestedPreampDb, settings.leftBands, settings.rightBands,
+                        settings.balanceDb, settings.monoBands, settings.crossfeed).preampDb
+                }
+                TuningHint("Headroom attenuation: %.1f dB · 48 kHz preview".format(-preamp))
+                TuningHint("Correction + sound mode · left: gold, right: grey. Curve excludes headroom, balance and crossfeed.")
+            } else TuningHint(if (averageEars) "Correction + sound mode · average of left and right" else "Correction + sound mode · 20 Hz–20 kHz")
         }
     }
 }

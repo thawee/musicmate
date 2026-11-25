@@ -348,6 +348,19 @@ public class FFMpegHelper {
         return Loudness.parseEbur128(logs, seconds);
     }
 
+    /** Read-only UI scan; the returned action cancels only this session. Callback runs off main. */
+    public static Runnable measureLoudnessAsync(String path, double seconds,
+                                               java.util.function.Consumer<Loudness> onResult) {
+        String cmd = "-hide_banner -nostats -i " + input(path)
+                + " -map 0:a:0 -vn -filter:a ebur128=peak=true -f null -";
+        FFmpegSession session = FFmpegKit.executeAsync(cmd, completed -> {
+            Loudness result = ReturnCode.isSuccess(completed.getReturnCode())
+                    ? Loudness.parseEbur128(completed.getAllLogsAsString(), seconds) : null;
+            onResult.accept(result);
+        });
+        return () -> FFmpegKit.cancel(session.getSessionId());
+    }
+
     // Update your interface to handle the new data
     public interface GenerateCallback {
         void onGenerated(String path, String qualityStatus, int realBits, double highFreqDb);
