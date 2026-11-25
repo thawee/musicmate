@@ -1599,13 +1599,15 @@ Quiet listening evidence: added default-off manual strength, gentle bass/treble 
 ## Release 3.34.0 — 2026-11-25
 - [x] Review pending scope, update version 162 and release documentation.
 - [x] Verify core/audio tests and optimized GitHub APK build/runtime.
-- [ ] Commit release changes and push branch plus v3.34.0 tag.
-- [ ] Verify GitHub workflow and published signed APK.
+- [x] Commit release changes and push branch plus v3.34.0 tag.
+- [x] Verify GitHub workflow and published signed APK (follow-up v3.34.1).
 
 Release verification: :app:assembleGithubRelease, :app:testGithubDebugUnitTest and :core:testDebugUnitTest passed (300 app + 291 core tests, no failures/errors). Log: /tmp/musicmate-3.34.0-release-check.log. Local optimized APK signed with the emulator debug certificate for smoke testing; matching installed certificate verified before update, MANAGE_EXTERNAL_STORAGE present. Emulator update succeeded without uninstall/data clearing; cold launch Status ok, drawer shows v3.34.0, MateTune opens with Night listening and Quiet listening; crash buffer empty. Production signing is performed by the tag-triggered GitHub workflow. Existing 22 tuning UI tests remain passing. Unrelated .claude/, .trail/ and graft/ excluded.
 
 Release publication recovery: v3.34.0 and commit 1f5e9dcd pushed. Workflow 45581142789 failed resolving optional Foojay 1.0.0 in settings.gradle before compilation. Plugin endpoint is available locally; diagnostic rerun request was denied (credential lacks Actions write). Remove unnecessary auto-download resolver since JDK 17 is installed by CI; publish follow-up 3.34.1 / 163 without altering v3.34.0.
 - [x] Verify 3.34.1 optimized build and installed-JDK toolchain.
-- [ ] Push 3.34.1 follow-up and verify signed release publication.
+- [x] Push 3.34.1 follow-up and verify signed release publication.
 
 3.34.1 local verification: optimized Github release rebuilt successfully after removing resolver (302 tasks executed); /tmp/musicmate-3.34.1-release-check.log. No audio/UI source changed from verified 3.34.0.
+
+Publication complete: release commit 1f5e9dcd, build fix 3aa75abb, branch play-storage and annotated tags v3.34.0/v3.34.1 pushed. GitHub workflow 45582265185 succeeded; https://github.com/thawee/musicmate/releases/tag/v3.34.1 is public with MusicMate-v3.34.1.apk (48,249,396 bytes). Downloaded asset verified by apksigner: production MusicMate certificate SHA-256 b5757a1ecce6cf1a5a9476c97432640764025f3c352d88824b268674ca1d29ee; package apincer.android.mmate, versionCode 163/versionName 3.34.1-261125, MANAGE_EXTERNAL_STORAGE present. Optimized 3.34.1 local smoke APK updated emulator successfully; cold launch Status ok (694 ms). Production APK was not installed over the emulator debug-signed package. Physical listening remains pending.
