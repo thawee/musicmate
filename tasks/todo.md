@@ -1603,3 +1603,9 @@ Quiet listening evidence: added default-off manual strength, gentle bass/treble 
 - [ ] Verify GitHub workflow and published signed APK.
 
 Release verification: :app:assembleGithubRelease, :app:testGithubDebugUnitTest and :core:testDebugUnitTest passed (300 app + 291 core tests, no failures/errors). Log: /tmp/musicmate-3.34.0-release-check.log. Local optimized APK signed with the emulator debug certificate for smoke testing; matching installed certificate verified before update, MANAGE_EXTERNAL_STORAGE present. Emulator update succeeded without uninstall/data clearing; cold launch Status ok, drawer shows v3.34.0, MateTune opens with Night listening and Quiet listening; crash buffer empty. Production signing is performed by the tag-triggered GitHub workflow. Existing 22 tuning UI tests remain passing. Unrelated .claude/, .trail/ and graft/ excluded.
+
+Release publication recovery: v3.34.0 and commit 1f5e9dcd pushed. Workflow 45581142789 failed resolving optional Foojay 1.0.0 in settings.gradle before compilation. Plugin endpoint is available locally; diagnostic rerun request was denied (credential lacks Actions write). Remove unnecessary auto-download resolver since JDK 17 is installed by CI; publish follow-up 3.34.1 / 163 without altering v3.34.0.
+- [x] Verify 3.34.1 optimized build and installed-JDK toolchain.
+- [ ] Push 3.34.1 follow-up and verify signed release publication.
+
+3.34.1 local verification: optimized Github release rebuilt successfully after removing resolver (302 tasks executed); /tmp/musicmate-3.34.1-release-check.log. No audio/UI source changed from verified 3.34.0.

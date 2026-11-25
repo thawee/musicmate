@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.34.1] - 2026-11-25
+
+### Fixed
+- **Release build:** Removed the optional remote Java toolchain resolver dependency. Builds use an installed JDK 17, already provided by the release workflow. The 3.34.0 tag did not publish an APK because this plugin could not be resolved on the runner.
+
+Includes the MateTune and Quiet listening improvements described below.
+
 ## [3.34.0] - 2026-11-25
 
 ### Added

@@ -1,4 +1,4 @@
-# MusicMate 3.34.0
+# MusicMate 3.34.1
 
 **Meet MateTune.** Headphone and speaker tuning now share a clearer name across settings and playback controls. Choose Gentle V for a lighter bass-and-treble lift, inspect combined EQ and headroom, and compare sound modes with estimated level matching.
 
@@ -8,6 +8,6 @@
 
 **Clearer audio analysis.** The updated analysis screen separates file fidelity from mastering measurements and makes peak details easier to inspect.
 
-Version code: 162. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.34.0/CHANGELOG.md) for details.
+Version code: 163. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.34.1/CHANGELOG.md) for details.
 
 Validation covers automated DSP measurements and emulator behavior. Physical-device listening and DAC loopback checks remain pending.
