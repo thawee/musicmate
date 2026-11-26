@@ -88,15 +88,6 @@
         tools:ignore="UnusedAttribute">
 
         <service
-            android:name=".service.MediaNotificationListener"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
-        <service
             android:name=".service.MusicMateServiceImpl"
             android:foregroundServiceType="mediaPlayback|connectedDevice"
             android:enabled="true"

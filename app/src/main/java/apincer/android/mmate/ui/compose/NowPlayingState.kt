@@ -7,6 +7,7 @@ import apincer.music.core.model.Track
 import apincer.music.core.playback.PlaybackState
 
 class NowPlayingState {
+    val powerampSong = mutableStateOf<apincer.android.mmate.service.PowerampSong?>(null)
     val track = mutableStateOf<Track?>(null)
     val albumArt = mutableStateOf<Bitmap?>(null)
     

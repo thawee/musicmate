@@ -395,12 +395,10 @@ fun MainScaffold(
                     val systemAccess = state.systemAccess.value
                     val accessSummary = when (systemAccess.summary) {
                         SystemAccessSummary.STORAGE_NEEDED -> stringResource(R.string.system_access_summary_storage_needed)
-                        SystemAccessSummary.OPTIONAL_ACCESS_OFF -> stringResource(R.string.system_access_summary_optional_off)
                         SystemAccessSummary.READY -> stringResource(R.string.system_access_summary_ready)
                     }
                     val accessSummaryColor = when (systemAccess.summary) {
                         SystemAccessSummary.STORAGE_NEEDED -> Color(0xFFFFB300)
-                        SystemAccessSummary.OPTIONAL_ACCESS_OFF -> Color(0xFF90A4AE)
                         SystemAccessSummary.READY -> Color(0xFF63D890)
                     }
 
@@ -656,7 +654,6 @@ fun MainScaffold(
         }
         PlayerPickerDialog(
             targets = state.playerTargets,
-            hasExternalPlayerAccess = state.systemAccess.value.hasExternalPlayerAccess,
             serverRunning = state.mediaServerState.isServerRunning,
             // The picker stays open: found players appear in it as they answer
             onStartServerClick = { callbacks?.onStartServerClicked() },
@@ -667,10 +664,6 @@ fun MainScaffold(
             },
             onBluetoothOutputClick = {
                 callbacks?.onOpenSystemAudioOutput()
-                state.showPlayerPickerDialog.value = false
-            },
-            onExternalPlayerAccessClick = {
-                callbacks?.onEnableExternalPlayerAccess()
                 state.showPlayerPickerDialog.value = false
             }
         )

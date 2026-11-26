@@ -98,6 +98,35 @@ import coil3.compose.AsyncImage
 typealias TelemetryWidgetMode = StudioVisualizerMode
 
 @Composable
+internal fun PowerampSongCard(song: apincer.android.mmate.service.PowerampSong) {
+    Column(
+        Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            .fillMaxWidth()
+            .background(Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            when (song.isPlaying) {
+                true -> "Poweramp · Playing"
+                false -> "Poweramp · Paused"
+                null -> "Reported by Poweramp"
+            },
+            color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp
+        )
+        Text(song.title, color = Color.White, fontWeight = FontWeight.SemiBold,
+            maxLines = 2, overflow = TextOverflow.Ellipsis)
+        val detail = listOf(song.artist, song.album).filter { it.isNotBlank() }.joinToString(" · ")
+        if (detail.isNotEmpty()) {
+            Text(detail, color = Color.White.copy(alpha = 0.7f),
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        Text("Controls and MateTune below apply to MusicMate playback.",
+            color = Color.White.copy(alpha = 0.55f), fontSize = 12.sp)
+    }
+}
+
+@Composable
 fun NowPlayingPage(
     state: NowPlayingState,
     canStartPlayback: Boolean = false,
@@ -249,6 +278,7 @@ fun NowPlayingPage(
             val artworkHeight = (maxHeight - audioControlsHeight)
                 .coerceAtLeast(200.dp * audioControlsDensity.fontScale)
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                state.powerampSong.value?.let { PowerampSongCard(it) }
         // ── 1. EDGE-TO-EDGE FLIP CONTAINER (Art + Metadata) ─────────────────────
         Box(
             modifier = Modifier

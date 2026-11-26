@@ -1,13 +1,13 @@
-# MusicMate 3.35.0
+# MusicMate 3.36.0
 
-**ReplayGain, easier to use.** Tap the playback leveling status to see track and album tags. Measure missing values for a track, album or library, with progress, cancellation and retry. Tag presence and applied gain are shown separately.
+**Notification access removed.** MusicMate no longer requests notification-listener access. Integrated discovery, transport control and queue continuation through other Android players' media sessions have been removed.
 
-**Matching playback controls.** Output opens player selection; MateTune opens tuning. Both use the same card style and full-card tap targets. Narrow screens and large text use stacked cards, with scrolling track details and fixed playback controls.
+**Optional Poweramp song display.** Enable **Settings → Player integrations → Show Poweramp song** to see Poweramp's reported song and playing/paused status in Music Center while MusicMate is open. Disabled by default; uses Poweramp broadcasts without notification access.
 
-**Cleaner audio measurements.** Refined level and RMS presentation makes the analysis screen easier to read.
+**Clear playback ownership.** Poweramp metadata appears in a separate card. MusicMate controls and MateTune apply to MusicMate playback. Local playback, DSP, ReplayGain, network outputs and explicit Open in External App file handoff remain available.
 
-**Reliable tag updates.** Newly measured tags refresh automatically, and album retries retain the complete album group. A real FLAC check confirmed that writing ReplayGain tags preserved decoded audio samples.
+**Validation.** 449 app unit tests and 18 emulator tests passed, including real broadcast delivery, settings, playback controls and local audio playback. Installed Poweramp interoperability still needs testing on a device with Poweramp.
 
-Version code: 164. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.35.0/CHANGELOG.md) for details.
+Version code: 165. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.36.0/CHANGELOG.md) for details.
 
-Validation includes automated tests and emulator checks, including 150% text. Physical-device listening and DAC loopback checks remain pending.
+This removes notification-listener access from the APK; Google Play Protect acceptance still depends on Google's assessment.

@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.36.0] - 2026-11-26
+
+### Added
+- **Optional Poweramp song display:** Enable Settings → Player integrations → Show Poweramp song to display reported song metadata and playback status in Music Center while MusicMate is open. Uses Poweramp broadcasts without notification access; disabled by default.
+
+### Removed
+- **Notification access:** Removed the notification-listener service and its setup prompts. MusicMate no longer discovers, controls or continues queues through other Android players' media sessions.
+
+### Changed
+- **Playback separation:** Poweramp metadata is displayed separately from MusicMate playback. MusicMate controls and MateTune apply to MusicMate's own playback; local playback, ReplayGain, network outputs and explicit Open in External App file handoff remain available.
+
 ## [3.35.0] - 2026-11-26
 
 ### Added

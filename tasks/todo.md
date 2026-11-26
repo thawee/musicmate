@@ -1646,3 +1646,28 @@ Validation: GitHub debug and instrumentation APKs built. Seven compact emulator 
 Validation: optimized GitHub release APK built successfully as 3.35.0-261126 (164). Core: 294 tests passed; app: 455 tests passed; no failures, errors or skipped tests. Prior emulator and decoded-PCM checks recorded above. Signed APK publication is handled by the tag-triggered GitHub release workflow.
 
 Publication verified: release commit ea28ff18dc87d7b1e86afaa6779dc4c7228220a7 and annotated v3.35.0 pushed to origin; remote tag resolves to that commit. GitHub Actions run 45756939250 completed successfully. Public release: https://github.com/thawee/musicmate/releases/tag/v3.35.0. Downloaded MusicMate-v3.35.0.apk (48,300,100 bytes): apksigner verification passed, certificate SHA-256 b5757a1ecce6cf1a5a9476c97432640764025f3c352d88824b268674ca1d29ee; aapt2 confirmed version 3.35.0-261126 / 164 and MANAGE_EXTERNAL_STORAGE. Evidence saved under out/validation/release-3.35.0.
+
+## Remove notification access (2026-11-26)
+- [x] Trace external player discovery, transport, permission UI and file handoff.
+- [x] Remove notification-listener capability and integrated external targets; retain explicit file handoff and network/local playback.
+- [x] Update affected tests and verify builds, APK manifest and playback UI.
+- Validation: 449 app unit tests passed; Github debug, Android-test and optimized release APK builds passed. Rebuilt debug and release manifests contain no notification listener, accessibility binding or SMS permission; MusicMate playback service remains.
+- Emulator: 8 instrumentation tests passed, covering installed manifest, permission/settings accessibility, local/network picker actions, transport controls at two text sizes, and real WAV playback with pause/seek/resume.
+- Existing ACTION_VIEW file handoff retained. External Android app monitoring/control/queue continuation removed; local playback, DSP/ReplayGain and network routing retained. Backend review and `git diff --check` passed; compared service/manifest changes with origin/master.
+- No new release published in this task. Existing v3.35.0 download still contains the listener. Play Protect acceptance of a new APK requires Google assessment and is not guaranteed by this change.
+
+## Optional Poweramp song detection (2026-11-26)
+- [x] Verify Poweramp broadcast metadata/status API and design observation separate from MusicMate playback.
+- [x] Add opt-in broadcast observation and show detected song/source without changing transport, queue or DSP routing.
+- [x] Verify parsing, opt-in lifecycle, UI and APK permissions with tests and builds.
+- Scope: foreground-only Poweramp broadcasts, disabled by default in Settings → Player integrations. Metadata-only card in Music Center; controls, queue and MateTune remain attached to MusicMate playback. No listener or other new permission.
+- Implementation: PowerampSongMonitor owns opt-in receiver lifecycle and bounded metadata; MainActivity observes separate NowPlayingState metadata; SettingsActivity/SettingsScreen expose the toggle; NowPlayingPage renders the passive card. Monitor and Compose instrumentation tests cover parsing, lifecycle, settings, status labels and a real dynamic broadcast.
+- Validation: all 449 app unit tests passed. Debug, Android-test and optimized unsigned release APK builds passed. Emulator: 18 instrumentation tests passed, including 7 monitor tests, 3 Poweramp UI/runtime tests (real dynamic broadcast delivery), settings/accessibility, transport at two text sizes, and actual local playback/pause/seek/resume. Debug/release APK manifests retain no notification listener, accessibility binding or SMS permission. `git diff --check` passed and changes reviewed against origin/master.
+- Evidence: `out/validation/poweramp-intent-detection/` contains build/test logs, APK manifests and results. Installed Poweramp interoperability still requires a device with Poweramp; no new release published.
+
+## Release 3.36.0 (2026-11-26)
+- [x] Review release scope and remote branch/tag; update version and release notes.
+- [x] Build release and verify version, permissions and existing test evidence.
+- [ ] Commit intended files; push branch and annotated tag.
+- [ ] Verify GitHub workflow publication, downloaded APK signature and manifest.
+- Validation: optimized release build passed as 3.36.0-261126 (165); APK manifest confirms all-files access and local playback service retained, notification listener/accessibility binding/SMS absent. Prior source validation: 449 app unit tests and 18 emulator tests passed. Evidence: `out/validation/release-3.36.0/` and `out/validation/poweramp-intent-detection/`.

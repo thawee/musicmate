@@ -55,6 +55,8 @@ fun SettingsScreen(
     onStudioKeepScreenOnChange: (Boolean) -> Unit = {},
     rendererVolumeLimit: Int = 80,
     onRendererVolumeLimitChange: (Int) -> Unit = {},
+    powerampSongDetection: Boolean = false,
+    onPowerampSongDetectionChange: (Boolean) -> Unit = {},
     onBackClick: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -134,6 +136,18 @@ fun SettingsScreen(
                     ),
                     selected = { tapActionMode.equals(it, ignoreCase = true) },
                     onSelect = onTapActionModeChange
+                )
+            }
+
+            SettingsCard(
+                title = "PLAYER INTEGRATIONS",
+                modifier = if (useTwoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth()
+            ) {
+                SettingsSwitchRow(
+                    title = "Show Poweramp song",
+                    subtitle = "Show the song Poweramp reports while MusicMate is open. No notification access needed. Controls and MateTune stay with MusicMate playback.",
+                    checked = powerampSongDetection,
+                    onCheckedChange = onPowerampSongDetectionChange
                 )
             }
 

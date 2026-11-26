@@ -1,7 +1,6 @@
 package apincer.android.mmate.utils;
 
 import android.Manifest;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -11,19 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 import androidx.core.content.ContextCompat;
 
-import android.content.ComponentName;
 
-import apincer.android.mmate.service.MediaNotificationListener;
 import apincer.music.core.provider.StorageMode;
 
 public class PermissionUtils {
     private static final String TAG = PermissionUtils.class.getName();
-
-    public static boolean isNotificationListenerEnabled(Context context) {
-        NotificationManager manager = context.getSystemService(NotificationManager.class);
-        ComponentName listener = new ComponentName(context, MediaNotificationListener.class);
-        return manager != null && manager.isNotificationListenerAccessGranted(listener);
-    }
 
     // Android 17 (API 37) blocks LAN traffic, including DLNA/SSDP multicast, until this runtime permission is granted
     public static boolean hasLocalNetworkAccess(Context context) {

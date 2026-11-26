@@ -13,13 +13,10 @@ import androidx.media3.session.MediaLibraryService.MediaLibrarySession;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
-import android.media.session.MediaController;
-import android.media.session.MediaSessionManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -32,10 +29,8 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -44,9 +39,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import apincer.android.mmate.utils.AudioOutputHelper;
-import apincer.android.mmate.utils.PermissionUtils;
-import apincer.android.mmate.ui.compose.ExternalPlayerAccessPolicy;
-import apincer.android.mmate.ui.compose.ExternalPlayerListenerAction;
 import apincer.music.core.Constants;
 import apincer.music.core.playback.AudioStreamCacheManager;
 import apincer.music.core.playback.DMRPlayer;
@@ -72,9 +64,9 @@ import kotlinx.coroutines.flow.StateFlowKt;
 
 /**
  * Media session monitoring service that:
- * 1. Discovers all active media sessions (external music player + streaming renderers)
- * 2. Controls external players (UAPP, Neutron Music, Hiby Music, etc.) and streaming players (RopieeeXL, WiiM)
- * 3. Bridges external playback state to streaming player targets
+ * 1. Discovers local audio output and network renderers
+ * 2. Controls local playback and network players (RopieeeXL, WiiM)
+ * 3. Coordinates playback state across local and network targets
  * 4. Manages playing queue for streaming player playback
  *
  * Control vs monitor is decided by the target: MusicMate drives local ExoPlayer playback and
@@ -110,7 +102,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     private AndroidPlayerController androidPlayer;
     private MediaLibrarySession mediaLibrarySession;
 
-    private MediaSessionManager mediaSessionManager;
 
     // Kotlin coroutines scope for this Android Service (used for cleanup)
     private final kotlinx.coroutines.Job serviceJob = kotlinx.coroutines.SupervisorKt.SupervisorJob(null);
@@ -130,11 +121,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     public StateFlow<Optional<PlaybackTarget>> getCurrentPlayerFlow() { return currentPlayerFlow; }
 
     private volatile String controlledPlayerTargetId;
-    // An external app (UAPP, HiBy, Poweramp) playing a track MusicMate sent it from the queue: when
-    // that track ends, MusicMate sends the next one (the app only has the one file). -1 when not.
-    private volatile long drivenExternalTrackId = -1;
-    private volatile long lastExternalPositionSec;
-    private volatile long drivenExternalStartedAt; // elapsedRealtime when MusicMate sent the track
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "MM:QueueTimer"));
     private ScheduledFuture<?> nextTrackTask;
@@ -244,7 +230,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 // An ACL disconnect may be unrelated to the active output (for example Android Auto).
                 AudioOutputHelper.clearCachedBluetoothCodec();
                 AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                refreshExternalPlayersSafe();
+                refreshLocalOutput();
             } else if ("android.bluetooth.a2dp.profile.action.CODEC_CONFIG_CHANGED".equals(action)) {
                 Log.d(TAG, "Bluetooth codec configuration changed.");
                 try {
@@ -294,104 +280,17 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 } catch (Exception ignored) {
                     AudioOutputHelper.refreshBluetoothCodecStatus(context);
                 }
-                refreshExternalPlayersSafe();
+                refreshLocalOutput();
             } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 Log.d(TAG, "Bluetooth device connected.");
                 AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                refreshExternalPlayersSafe();
+                refreshLocalOutput();
                 android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
                 mainHandler.postDelayed(() -> {
                     AudioOutputHelper.refreshBluetoothCodecStatus(context);
-                    refreshExternalPlayersSafe();
+                    refreshLocalOutput();
                 }, 1000);
             }
-        }
-    }
-
-    private final MediaSessionManager.OnActiveSessionsChangedListener sessionChangeListener =
-            controllers -> {
-               // Log.d(TAG, "Active sessions changed: " + controllers.size());
-                updateAvailableExternalPlayers(controllers);
-            };
-    private boolean activeSessionsListenerRegistered = false;
-    // One callback per external app session: a paused app that resumes changes no session list,
-    // so only its own state callback tells us it started playing
-    private final java.util.Map<MediaController, MediaController.Callback> sessionWatchers = new java.util.HashMap<>();
-
-    public MusicMateServiceImpl( ) {
-    }
-
-    private void refreshExternalPlayersSafe() {
-        syncExternalPlayerAccess();
-    }
-
-    private void syncExternalPlayerAccess() {
-        if (mediaSessionManager == null) {
-            updateAvailableExternalPlayers(null);
-            return;
-        }
-
-        boolean hasAccess = PermissionUtils.isNotificationListenerEnabled(this);
-        ExternalPlayerListenerAction action = ExternalPlayerAccessPolicy.nextAction(
-                activeSessionsListenerRegistered,
-                hasAccess);
-        ComponentName notificationListener = new ComponentName(this, MediaNotificationListener.class);
-
-        try {
-            if (action == ExternalPlayerListenerAction.REGISTER) {
-                mediaSessionManager.addOnActiveSessionsChangedListener(
-                        sessionChangeListener,
-                        notificationListener);
-                activeSessionsListenerRegistered = true;
-            } else if (action == ExternalPlayerListenerAction.UNREGISTER) {
-                mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
-                activeSessionsListenerRegistered = false;
-            }
-
-            List<MediaController> controllers = hasAccess
-                    ? mediaSessionManager.getActiveSessions(notificationListener)
-                    : null;
-            updateAvailableExternalPlayers(controllers);
-        } catch (Throwable t) {
-            Log.w(TAG, "Failed to synchronize external player access", t);
-            if (!hasAccess) {
-                activeSessionsListenerRegistered = false;
-            }
-            updateAvailableExternalPlayers(null);
-        }
-    }
-
-    /** An external app that starts playing is offered to the player priority (it may take over an idle target). */
-    private void watchExternalSession(MediaController controller, PlaybackTarget player) {
-        MediaController.Callback callback = new MediaController.Callback() {
-            @Override
-            public void onPlaybackStateChanged(android.media.session.PlaybackState state) {
-                if (state == null || state.getState() != android.media.session.PlaybackState.STATE_PLAYING) return;
-                PlaybackTarget current = getActivePlayer();
-                if (current != null && current.getTargetId().equals(player.getTargetId())) return;
-                switchPlayer(player, false);
-            }
-        };
-        try {
-            controller.registerCallback(callback, new android.os.Handler(android.os.Looper.getMainLooper()));
-            synchronized (sessionWatchers) {
-                sessionWatchers.put(controller, callback);
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Cannot watch " + controller.getPackageName(), e);
-        }
-    }
-
-    private void unwatchExternalSessions() {
-        synchronized (sessionWatchers) {
-            for (java.util.Map.Entry<MediaController, MediaController.Callback> watcher : sessionWatchers.entrySet()) {
-                try {
-                    watcher.getKey().unregisterCallback(watcher.getValue());
-                } catch (Exception ignored) {
-                    // the session is already gone
-                }
-            }
-            sessionWatchers.clear();
         }
     }
 
@@ -404,8 +303,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         return player != null && ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(player.getTargetId());
     }
 
-    private void updateAvailableExternalPlayers(List<MediaController> controllers) {
-        // Remove all existing external Players
+    private void refreshLocalOutput() {
+        // Rebuild the local output without registering other Android apps.
         addLocalPlaybackTarget(null, true);
 
         // Always register default Local Audio Output target
@@ -428,47 +327,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             addLocalPlaybackTarget(localTarget, false);
         }
 
-        PlaybackTarget playingPlayer = null;
-        Set<String> addedPackages = new HashSet<>();
-        unwatchExternalSessions();
-
-        // Add external media session targets
-        if (controllers != null) {
-            String selfPackage = getPackageName();
-            for (MediaController controller : controllers) {
-                if (controller == null) continue;
-                String packageName = controller.getPackageName();
-                if (selfPackage != null && selfPackage.equalsIgnoreCase(packageName)) {
-                    continue; // Skip self — MusicMate is already registered as the primary local player target
-                }
-                PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), packageName);
-                if (player != null) {
-                    addLocalPlaybackTarget(player, false);
-                    addedPackages.add(packageName);
-                    watchExternalSession(controller, player);
-                    android.media.session.PlaybackState state = controller.getPlaybackState();
-                    if (state != null && state.getState() == android.media.session.PlaybackState.STATE_PLAYING) {
-                        playingPlayer = player;
-                    }
-                }
-            }
-        }
-
-        // Add installed external music players even if not currently playing
-        for (String pkg : ExternalAndroidPlayer.SUPPORTED_PLAYERS) {
-            if (!addedPackages.contains(pkg) && ExternalAndroidPlayer.Factory.isPackageInstalled(getApplicationContext(), pkg)) {
-                PlaybackTarget player = ExternalAndroidPlayer.Factory.create(getApplicationContext(), pkg);
-                if (player != null) {
-                    addLocalPlaybackTarget(player, false);
-                    addedPackages.add(pkg);
-                }
-            }
-        }
-
-        // If an external player is playing or if no player is selected, auto-select!
-        if (playingPlayer != null) {
-            switchPlayer(playingPlayer, false);
-        } else if (!currentPlayerFlow.getValue().isPresent()) {
+        if (!currentPlayerFlow.getValue().isPresent()) {
             String lastPlayerId = apincer.music.core.Settings.getLastPlayerTargetId(getApplicationContext());
             if (lastPlayerId != null && !lastPlayerId.isEmpty()) {
                 switchPlayer(lastPlayerId, true);
@@ -548,9 +407,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             hubStatus.observeForever(hubStatusMirror);
         }
 
-        // external player controller
-        mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
-                androidPlayer = new AndroidPlayerController(getApplicationContext(), mediaSessionManager);
+        // Local playback controller
+        androidPlayer = new AndroidPlayerController(getApplicationContext());
         
         // Initialize MediaLibrarySession for Media3
         if (androidPlayer.getInternalExoPlayer() != null) {
@@ -585,7 +443,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             notificationProvider.setSmallIcon(R.drawable.ic_notification_default);
             setMediaNotificationProvider(notificationProvider);
         }
-        syncExternalPlayerAccess();
+        refreshLocalOutput();
 
         // Load queue from database
         if(queueManager != null) {
@@ -797,11 +655,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
         AudioOutputHelper.cleanupBluetooth(getApplicationContext());
 
-        if (mediaSessionManager != null && activeSessionsListenerRegistered) {
-            mediaSessionManager.removeOnActiveSessionsChangedListener(sessionChangeListener);
-            activeSessionsListenerRegistered = false;
-        }
-        unwatchExternalSessions();
         if (androidPlayer != null) {
             androidPlayer.release();
         }
@@ -850,11 +703,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             if (isControllable(playbackTarget)) {
                 internalPlayOnDMRPlayer(playbackTarget, song);
             } else {
-                boolean externalApp = playbackTarget instanceof ExternalAndroidPlayer
-                        && !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId());
-                drivenExternalTrackId = (externalApp && song != null) ? song.getId() : -1;
-                lastExternalPositionSec = 0;
-                drivenExternalStartedAt = android.os.SystemClock.elapsedRealtime();
                 if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
                     queueManager.setPlaybackTrack(song);
                 }
@@ -894,12 +742,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             } else if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
                 // Local ExoPlayer: advance MusicMate's queue
                 playNextFromQueue(userSkip);
-            } else if (isDrivingExternalApp()) {
-                // An external app playing MusicMate's queue: it only has the one file
-                playNextFromQueue(userSkip);
-            } else {
-                // External music app: MediaSession IPC event
-                androidPlayer.skipToNext();
             }
         });
     }
@@ -917,12 +759,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         } else {
             stopPlaying();
         }
-    }
-
-    /** True while an external app is playing the track MusicMate sent it from the queue. */
-    private boolean isDrivingExternalApp() {
-        Track current = getNowPlayingSong();
-        return drivenExternalTrackId >= 0 && current != null && current.getId() == drivenExternalTrackId;
     }
 
     private void internalSkipToNextOnDMRPlayer(PlaybackTarget playbackTarget, boolean userSkip) {
@@ -961,9 +797,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     queueManager.setPlaybackTrack(prevSong);
                     playSong(prevSong);
                 }
-            } else {
-                // External music app: MediaSession IPC event
-                androidPlayer.skipToPrevious();
             }
         });
     }
@@ -991,7 +824,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             if (isControllable(playbackTarget)) {
                 InternalPauseDMRPlayer(playbackTarget);
             } else {
-                // external player
+                // Local playback
                 androidPlayer.pause();
             }
         });
@@ -1095,7 +928,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             if (isControllable(playbackTarget)) {
                 internalStopOnDMRPlayer(playbackTarget);
             } else {
-                // external player
+                // Local playback
                 androidPlayer.stopPlaying();
             }
         });
@@ -1512,7 +1345,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void refreshPlayerDiscovery() {
-        refreshExternalPlayersSafe();
+        refreshLocalOutput();
         if (mediaHub != null) {
             mediaHub.refreshDiscovery();
         }
@@ -1548,6 +1381,8 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     @Override
     public void switchPlayer(PlaybackTarget newTarget, boolean controlled) {
         if (newTarget != null) {
+            if (newTarget instanceof ExternalAndroidPlayer
+                    && !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(newTarget.getTargetId())) return;
             // 1. Resolve the real target (e.g. proxy to actual DMR)
             final PlaybackTarget resolvedTarget = (newTarget.isStreaming()) ? resolveStreamingPlayerTarget(newTarget) : newTarget;
 
@@ -1562,7 +1397,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             final boolean isSameTarget = currentPlayerFlow.getValue().isPresent() 
                 && currentPlayerFlow.getValue().get().getTargetId().equals(resolvedTarget.getTargetId());
 
-            // Automatic switches (a stream, an external app starting) follow the player priority:
+            // Automatic switches from network streams follow the player priority:
             // never interrupt what is playing; an idle target never blocks one that starts; two at
             // once: the higher rank wins. The listener's own choice (controlled) always wins.
             if (!controlled) {
@@ -1603,7 +1438,7 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
             // 3. Activate the new player
             if (resolvedTarget instanceof ExternalAndroidPlayer externalPlayer) {
-                // Register callback to ensure we are listening to this session
+                // Attach local playback updates.
                 androidPlayer.registerCallback(externalPlayer, playbackCallback);
                 if (controlled && activeTrack != null && !isSameTarget && wasPlaying) {
                     playSong(activeTrack, false);
@@ -1761,12 +1596,11 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
      * Priority Order:
      * 1. DMR Player (DLNA/UPnP, target.isStreaming() and target.canReadSate())
      * 2. WebStreaming Player (target.isStreaming())
-     * 3. ExternalPlayer (MediaSession-based)
      *
      * @return An Optional containing the highest-priority player found, or Optional.empty() if no suitable player is available.
      */
     public Optional<PlaybackTarget> autoSelectBestPlayer() {
-        // Startup / fallback default: DLNA renderer > local playback > external app. A passive
+        // Startup / fallback default: DLNA renderer > local playback. A passive
         // stream is driven by another device and cannot be chosen (PlayerPriority).
         List<PlaybackTarget> targets = getPlaybackTargets();
         if (targets == null || targets.isEmpty()) return Optional.empty();
@@ -2014,9 +1848,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
 
     @Override
     public void onMediaTrackChanged(Track song) {
-        if (song == null || song.getId() != drivenExternalTrackId) {
-            drivenExternalTrackId = -1; // the app moved on by itself (its own queue or the listener)
-        }
         currentTrackFlow.setValue(Optional.ofNullable(song));
         apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
         state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -2089,7 +1920,6 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
         observeListeningState(state);
         playbackStateFlow.setValue(state);
         apincer.music.core.playback.spi.PlaybackTarget target = currentPlayerFlow.getValue().orElse(null);
-        continueExternalQueueIfEnded(state, target);
         // Only manually update notification if NOT using the local Media3 ExoPlayer
         if (target == null || !ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) {
             boolean isPlaying = state != null && state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING;
@@ -2105,42 +1935,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             // setValue() calls with the same object instance, even if fields changed.
             apincer.music.core.playback.PlaybackState updated = state.copy();
             updated.currentPositionSecond = elapsedTimeMS;
-            if (drivenExternalTrackId >= 0) lastExternalPositionSec = Math.max(lastExternalPositionSec, elapsedTimeMS);
             observeListeningState(updated);
             if (acceptingHistory && updated.currentTrack != null && elapsedTimeMS >= 0) {
                 historyTracker.onPosition(updated.currentTrack.getId(), elapsedTimeMS * 1000L,
                         android.os.SystemClock.elapsedRealtime(), System.currentTimeMillis());
             }
             playbackStateFlow.setValue(updated);
-        }
-    }
-
-    /**
-     * An external app that played the track MusicMate sent it reports STOPPED (or PAUSED) at the
-     * end of that one file; continue with the queue's next track. A stop mid-track, or the app
-     * moving to its own next track, does not count (ExternalTrackEnd, onMediaTrackChanged).
-     */
-    private void continueExternalQueueIfEnded(apincer.music.core.playback.PlaybackState state,
-                                              apincer.music.core.playback.spi.PlaybackTarget target) {
-        if (state == null || !(target instanceof ExternalAndroidPlayer)
-                || ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(target.getTargetId())) return;
-        Track current = getNowPlayingSong();
-        if (current == null || current.getId() != drivenExternalTrackId) return;
-        // A late STOPPED for the previous track (with its end position) must not skip this one
-        if (android.os.SystemClock.elapsedRealtime() - drivenExternalStartedAt < 3000) return;
-        if (state.currentState == apincer.music.core.playback.PlaybackState.State.PLAYING) {
-            lastExternalPositionSec = Math.max(lastExternalPositionSec, state.currentPositionSecond);
-            return;
-        }
-        long position = Math.max(lastExternalPositionSec, state.currentPositionSecond);
-        if (ExternalTrackEnd.endedNaturally(state.currentState, position, current.getAudioDuration())) {
-            drivenExternalTrackId = -1; // once per track
-            Log.i(TAG, "External app finished '" + current.getTitle() + "'; continuing the queue");
-            scheduler.execute(() -> {
-                historyTracker.end(false);
-                if (stopForEndOfTrackSleep()) return;
-                playNextFromQueue(false);
-            });
         }
     }
 

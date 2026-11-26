@@ -32,7 +32,6 @@ fun PermissionScreen(
     systemAccess: SystemAccessState,
     focusedCapability: SystemAccessCapability = SystemAccessCapability.NONE,
     onStorageAccessClick: () -> Unit,
-    onExternalPlayerAccessClick: () -> Unit,
     onBack: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -114,19 +113,6 @@ fun PermissionScreen(
                     actionText = stringResource(R.string.action_open_storage_settings),
                     focused = focusedCapability == SystemAccessCapability.STORAGE,
                     onClick = onStorageAccessClick
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                PermissionItem(
-                    iconRes = R.drawable.ic_round_notification_add_24,
-                    title = stringResource(R.string.permission_external_player_title),
-                    requirementText = stringResource(R.string.permission_optional),
-                    desc = stringResource(R.string.permission_external_player_description),
-                    granted = systemAccess.hasExternalPlayerAccess,
-                    actionText = stringResource(R.string.action_enable_external_player_access),
-                    focused = focusedCapability == SystemAccessCapability.EXTERNAL_PLAYERS,
-                    onClick = onExternalPlayerAccessClick
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))

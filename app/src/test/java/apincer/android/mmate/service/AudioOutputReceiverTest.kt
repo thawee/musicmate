@@ -32,7 +32,7 @@ class AudioOutputReceiverTest {
         service = spyk(mockk<MusicMateServiceImpl>(), recordPrivateCalls = true)
         every { service["isPlaying"]() } returns true
         every { service["isLocalTarget"]() } returns true
-        every { service["refreshExternalPlayersSafe"]() } returns Unit
+        every { service["refreshLocalOutput"]() } returns Unit
         every { service.pausePlayer() } just Runs
     }
 
@@ -46,7 +46,7 @@ class AudioOutputReceiverTest {
         verify(exactly = 0) { service.pausePlayer() }
         verify(exactly = 1) { AudioOutputHelper.clearCachedBluetoothCodec() }
         verify(exactly = 1) { AudioOutputHelper.refreshBluetoothCodecStatus(context) }
-        verify(exactly = 1) { service["refreshExternalPlayersSafe"]() }
+        verify(exactly = 1) { service["refreshLocalOutput"]() }
     }
 
     @Test

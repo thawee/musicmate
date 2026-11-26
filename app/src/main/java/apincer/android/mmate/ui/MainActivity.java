@@ -97,6 +97,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity implements apincer.android.mmate.ui.compose.MainScaffoldCallbacks {
     private static final String TAG = "MainActivity";
+    private apincer.android.mmate.service.PowerampSongMonitor powerampSongMonitor;
     /** Boolean extra: open Music Center on Now Playing, e.g. from a song's details. */
     public static final String EXTRA_OPEN_NOW_PLAYING = "apincer.android.mmate.OPEN_NOW_PLAYING";
 
@@ -457,6 +458,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
+        powerampSongMonitor = new apincer.android.mmate.service.PowerampSongMonitor(this);
+        powerampSongMonitor.getSong().observe(this, song ->
+                MainScaffoldState.get().getNowPlayingState().getPowerampSong().setValue(song));
         if (savedInstanceState == null) openNowPlayingIfAsked(getIntent());
         if (savedInstanceState != null) {
             reopenFoldersAfterStorageGrant = savedInstanceState.getBoolean(STATE_REOPEN_FOLDERS);
@@ -774,6 +778,19 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        powerampSongMonitor.start();
+    }
+
+    @Override
+    protected void onStop() {
+        powerampSongMonitor.stop();
+        MainScaffoldState.get().getNowPlayingState().getPowerampSong().setValue(null);
+        super.onStop();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         refreshSystemAccessState(false);
@@ -834,15 +851,8 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     }
 
     private void refreshSystemAccessState(boolean forcePlayerRefresh) {
-        boolean previouslyHadExternalPlayerAccess = MainScaffoldState.get()
-                .getSystemAccess().getValue().getHasExternalPlayerAccess();
-        boolean hasStorageAccess = PermissionUtils.checkAccessPermissions(this);
-        boolean hasExternalPlayerAccess = PermissionUtils.isNotificationListenerEnabled(this);
-        MainScaffoldState.updateSystemAccess(hasStorageAccess, hasExternalPlayerAccess);
-        boolean externalPlayerAccessChanged =
-                previouslyHadExternalPlayerAccess != hasExternalPlayerAccess;
-        if (isPlaybackServiceBound && playbackService != null
-                && (forcePlayerRefresh || externalPlayerAccessChanged)) {
+        MainScaffoldState.updateSystemAccess(PermissionUtils.checkAccessPermissions(this));
+        if (isPlaybackServiceBound && playbackService != null && forcePlayerRefresh) {
             playbackService.refreshPlayerDiscovery();
             updatePlayerPickerState();
         }
@@ -1445,13 +1455,6 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     public void onOpenSystemAudioOutput() {
         openSystemAudioOutputPanel();
-    }
-
-    @Override
-    public void onEnableExternalPlayerAccess() {
-        startActivity(PermissionActivity.createIntent(
-                this,
-                apincer.android.mmate.ui.compose.SystemAccessCapability.EXTERNAL_PLAYERS));
     }
 
     @Override

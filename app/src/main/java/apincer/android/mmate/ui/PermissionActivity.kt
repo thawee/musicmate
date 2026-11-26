@@ -2,7 +2,6 @@ package apincer.android.mmate.ui
 
 import android.Manifest
 import android.content.ActivityNotFoundException
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -18,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import apincer.android.mmate.R
-import apincer.android.mmate.service.MediaNotificationListener
 import apincer.android.mmate.ui.compose.MusicMateTheme
 import apincer.android.mmate.ui.compose.PermissionScreen
 import apincer.android.mmate.ui.compose.SystemAccessCapability
@@ -46,7 +44,6 @@ class PermissionActivity : ComponentActivity() {
                     systemAccess = systemAccess,
                     focusedCapability = focusedCapability,
                     onStorageAccessClick = ::openStorageAccessSettings,
-                    onExternalPlayerAccessClick = ::openExternalPlayerAccessSettings,
                     onBack = { finish() }
                 )
             }
@@ -75,8 +72,7 @@ class PermissionActivity : ComponentActivity() {
 
     private fun refreshSystemAccess() {
         systemAccess = SystemAccessState(
-            hasStorageAccess = PermissionUtils.checkAccessPermissions(this),
-            hasExternalPlayerAccess = PermissionUtils.isNotificationListenerEnabled(this)
+            hasStorageAccess = PermissionUtils.checkAccessPermissions(this)
         )
     }
 
@@ -104,14 +100,6 @@ class PermissionActivity : ComponentActivity() {
             prefs.edit().putBoolean(KEY_AUDIO_ASKED, true).apply()
             requestAudio.launch(permission)
         }
-    }
-
-    private fun openExternalPlayerAccessSettings() {
-        val listener = ComponentName(this, MediaNotificationListener::class.java)
-        val detailSettings = Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS).apply {
-            putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, listener.flattenToString())
-        }
-        launchSettings(detailSettings, Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
     }
 
     private fun launchSettings(primary: Intent, fallback: Intent) {

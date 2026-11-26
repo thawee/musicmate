@@ -8,50 +8,18 @@ class SystemAccessStateTest {
     @Test
     fun `missing storage is the highest priority drawer status`() {
         val state = SystemAccessState(
-            hasStorageAccess = false,
-            hasExternalPlayerAccess = true
+            hasStorageAccess = false
         )
 
         assertEquals(SystemAccessSummary.STORAGE_NEEDED, state.summary)
     }
 
     @Test
-    fun `optional access is reported after required storage is granted`() {
+    fun `granted storage access is ready`() {
         val state = SystemAccessState(
-            hasStorageAccess = true,
-            hasExternalPlayerAccess = false
-        )
-
-        assertEquals(SystemAccessSummary.OPTIONAL_ACCESS_OFF, state.summary)
-    }
-
-    @Test
-    fun `all granted access is ready`() {
-        val state = SystemAccessState(
-            hasStorageAccess = true,
-            hasExternalPlayerAccess = true
+            hasStorageAccess = true
         )
 
         assertEquals(SystemAccessSummary.READY, state.summary)
-    }
-
-    @Test
-    fun `listener registration follows access transitions idempotently`() {
-        assertEquals(
-            ExternalPlayerListenerAction.REGISTER,
-            ExternalPlayerAccessPolicy.nextAction(isRegistered = false, hasAccess = true)
-        )
-        assertEquals(
-            ExternalPlayerListenerAction.NONE,
-            ExternalPlayerAccessPolicy.nextAction(isRegistered = true, hasAccess = true)
-        )
-        assertEquals(
-            ExternalPlayerListenerAction.UNREGISTER,
-            ExternalPlayerAccessPolicy.nextAction(isRegistered = true, hasAccess = false)
-        )
-        assertEquals(
-            ExternalPlayerListenerAction.NONE,
-            ExternalPlayerAccessPolicy.nextAction(isRegistered = false, hasAccess = false)
-        )
     }
 }
