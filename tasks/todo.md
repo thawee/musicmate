@@ -1640,7 +1640,9 @@ Validation: GitHub debug and instrumentation APKs built. Seven compact emulator 
 - [x] Review release scope, workflow and remote branch/tag state.
 - [x] Update version code/name and release notes.
 - [x] Build optimized release and run relevant unit checks; retain prior emulator evidence.
-- [ ] Commit intended source/tests/docs, push branch and annotated tag.
-- [ ] Verify remote commit/tag and GitHub release workflow publication.
+- [x] Commit intended source/tests/docs, push branch and annotated tag.
+- [x] Verify remote commit/tag and GitHub release workflow publication.
 
 Validation: optimized GitHub release APK built successfully as 3.35.0-261126 (164). Core: 294 tests passed; app: 455 tests passed; no failures, errors or skipped tests. Prior emulator and decoded-PCM checks recorded above. Signed APK publication is handled by the tag-triggered GitHub release workflow.
+
+Publication verified: release commit ea28ff18dc87d7b1e86afaa6779dc4c7228220a7 and annotated v3.35.0 pushed to origin; remote tag resolves to that commit. GitHub Actions run 45756939250 completed successfully. Public release: https://github.com/thawee/musicmate/releases/tag/v3.35.0. Downloaded MusicMate-v3.35.0.apk (48,300,100 bytes): apksigner verification passed, certificate SHA-256 b5757a1ecce6cf1a5a9476c97432640764025f3c352d88824b268674ca1d29ee; aapt2 confirmed version 3.35.0-261126 / 164 and MANAGE_EXTERNAL_STORAGE. Evidence saved under out/validation/release-3.35.0.
