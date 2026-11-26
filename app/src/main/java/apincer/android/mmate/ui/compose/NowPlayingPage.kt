@@ -60,6 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -228,6 +229,9 @@ fun NowPlayingPage(
         label = "animatedSecondaryColor"
     )
 
+    val audioControlsDensity = androidx.compose.ui.platform.LocalDensity.current
+    var audioControlsHeight by remember { mutableStateOf(160.dp) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -240,11 +244,16 @@ fun NowPlayingPage(
                 )
             )
     ) {
+        // Keep metadata readable at large text sizes; only this region scrolls.
+        BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+            val artworkHeight = (maxHeight - audioControlsHeight)
+                .coerceAtLeast(200.dp * audioControlsDensity.fontScale)
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         // ── 1. EDGE-TO-EDGE FLIP CONTAINER (Art + Metadata) ─────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f) // Takes all available vertical space in the 65% sheet!
+                .height(artworkHeight)
                 .semantics {
                     role = Role.Button
                     onClick(if (flipped) "Show album artwork" else "Show audio details") {
@@ -398,6 +407,7 @@ fun NowPlayingPage(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             PlaybackLibraryStatus(track)
+                            LevelingStatusButton(track, state.remoteTarget.value, missingOnly = true)
                             if (track != null) {
                                 QualityBadge(track = track, expanded = true)
                             } else if (state.specsVerdict.value.isNotEmpty()) {
@@ -407,82 +417,7 @@ fun NowPlayingPage(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Output Target Pill (Interactive Device Selector)
-                        val rawTargetTitle = state.targetTitle.value.ifEmpty { "Local Audio" }
-                        val cleanTargetTitle = remember(rawTargetTitle) { sanitizeTargetDeviceTitle(rawTargetTitle) }
-                        val isBitPerfect = rawTargetTitle.contains("Bit-Perfect", ignoreCase = true) || state.targetBadge.value.contains("Bit-Perfect", ignoreCase = true)
-                        val isDLNA = rawTargetTitle.contains("DLNA", ignoreCase = true) || state.targetBadge.value.contains("DLNA", ignoreCase = true)
-                        val isBT = rawTargetTitle.contains("BT", ignoreCase = true) || rawTargetTitle.contains("Bluetooth", ignoreCase = true) || state.targetBadge.value.contains("Bluetooth", ignoreCase = true)
-                        val targetDotColor = when {
-                            isBitPerfect -> Color(0xFF00E676)
-                            isDLNA -> Color(0xFF00E5FF)
-                            isBT -> Color(0xFF64B5F6)
-                            else -> Color(0xFFFFD700)
-                        }
 
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .widthIn(max = 220.dp)
-                                .heightIn(min = 48.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MusicMateDesignTokens.Surfaces.GlassPill)
-                                .border(0.75.dp, targetDotColor.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                .clickable { onSelectTargetPlayer() }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(targetDotColor)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = cleanTargetTitle,
-                                modifier = Modifier.weight(1f, fill = false),
-                                color = Color.White.copy(alpha = 0.95f),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = 0.3.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            if (state.targetBadge.value.isNotEmpty()) {
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(targetDotColor.copy(alpha = 0.15f))
-                                        .padding(horizontal = 4.dp, vertical = 1.dp)
-                                ) {
-                                    Text(
-                                        text = state.targetBadge.value,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        color = targetDotColor,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                painter = painterResource(R.drawable.ic_expand_more),
-                                contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.75f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        val remoteTarget = state.remoteTarget.value
-                        if (state.carDspAvailable.value || state.targetBadge.value == "USB AUDIO" || remoteTarget != null) {
-                            // Wrap the controls at large text sizes instead of squeezing the device badge.
-                            AudioTuningChip(remoteTarget = remoteTarget)
-                        }
-                        }
                     }
                 }
             } else {
@@ -649,8 +584,7 @@ fun NowPlayingPage(
                         // Row 2: Channels, Dynamic Range & volume leveling
                         val hasChannels = channelsStr.isNotEmpty()
                         val hasDr = drStr.isNotEmpty() && drStr != "-"
-                        val leveling = levelingStatus(rememberLeveling(track?.path), state.remoteTarget.value)
-                        if (hasChannels || hasDr || leveling != null) {
+                        if (hasChannels || hasDr || track != null) {
                             // FlowRow: at large text sizes a value moves to the next line whole
                             FlowRow(
                                 itemVerticalAlignment = Alignment.CenterVertically,
@@ -678,18 +612,7 @@ fun NowPlayingPage(
                                         softWrap = false
                                     )
                                 }
-                                if (leveling != null) {
-                                    Text(
-                                        text = if (hasChannels || hasDr) " • ${leveling.text}" else leveling.text,
-                                        color = leveling.color,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontFamily = FontFamily.Monospace,
-                                        letterSpacing = 0.5.sp,
-                                        softWrap = false,
-                                        modifier = Modifier.semantics { contentDescription = leveling.description }
-                                    )
-                                }
+                                LevelingStatusButton(track, state.remoteTarget.value)
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                         }
@@ -747,6 +670,20 @@ fun NowPlayingPage(
                         Text(text = "Tap to flip back", color = MusicMateDesignTokens.Text.Muted, fontSize = 12.sp)
                     }
                 }
+            }
+        }
+
+        PlaybackAudioControls(
+            outputName = remember(state.targetTitle.value) {
+                sanitizeTargetDeviceTitle(state.targetTitle.value.ifEmpty { "Local Audio" })
+            },
+            outputDetail = state.targetBadge.value.takeIf { it.isNotBlank() },
+            remoteTarget = state.remoteTarget.value,
+            onSelectOutput = onSelectTargetPlayer,
+            modifier = Modifier.onSizeChanged {
+                audioControlsHeight = with(audioControlsDensity) { it.height.toDp() }
+            }.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
             }
         }
 

@@ -169,7 +169,10 @@ fun TagsTechnicalPage(
         }
 
         TechCard(title = "LOUDNESS (REPLAYGAIN)") {
-            ReplayGainCard(info = techData.replayGainInfo)
+            val tags = rememberReplayGainTags(track.path)
+            if (tags.loaded) ReplayGainCard(info = tags.info)
+            else Text(androidx.compose.ui.res.stringResource(R.string.replaygain_reading))
+            LevelingStatusButton(track, MainScaffoldState.get().nowPlayingState.remoteTarget.value)
         }
 
         TechCard(title = "EMBEDDED COVER ART") {
@@ -335,17 +338,17 @@ fun MetadataHealthCard(track: Track, coverArtInfo: CoverArtInfo) {
 
 @Composable
 fun ReplayGainCard(info: apincer.music.core.playback.ReplayGainManager.ReplayGainInfo?) {
-    val hasTg = info?.hasTrackGain == true
-    val hasAg = info?.hasAlbumGain == true
+    val hasTg = info?.let { it.hasTrackGain && it.trackGainDb.isFinite() } == true
+    val hasAg = info?.let { it.hasAlbumGain && it.albumGainDb.isFinite() } == true
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
+        androidx.compose.foundation.layout.FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = if (hasTg || hasAg) "REPLAYGAIN 2.0 / EBU R128 DETECTED" else "NO REPLAYGAIN TAGS DETECTED",
+                text = androidx.compose.ui.res.stringResource(R.string.replaygain_tags),
                 color = if (hasTg || hasAg) Color(0xFF64B5F6) else Color.Gray,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
@@ -356,7 +359,7 @@ fun ReplayGainCard(info: apincer.music.core.playback.ReplayGainManager.ReplayGai
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
-                    text = if (hasTg || hasAg) "ACTIVE" else "UNTAGGED",
+                    text = androidx.compose.ui.res.stringResource(if (hasTg || hasAg) R.string.replaygain_ready else R.string.replaygain_missing_short),
                     color = if (hasTg || hasAg) Color(0xFF64B5F6) else Color.Gray,
                     fontWeight = FontWeight.Bold,
                     fontSize = 11.sp

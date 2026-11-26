@@ -3,6 +3,7 @@ package apincer.music.core.playback;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -94,4 +95,44 @@ public class LoudnessTaggerTest {
         tagger.tag(groups.get(0), listener);
         assertNull(written.get("/a.mp3")[1]);
     }
+
+    @Test
+    public void cancellationBetweenMeasurementsDoesNotStartAlbumWrites() {
+        Track a = track("/a.flac", "Album", -10.0);
+        Track b = track("/b.flac", "Album", -14.0);
+        library = Arrays.asList(a, b);
+        int[] checks = {0};
+
+        try {
+            tagger.tag(Arrays.asList(a, b), listener, () -> ++checks[0] > 1);
+        } catch (java.util.concurrent.CancellationException expected) {
+            assertTrue(written.isEmpty());
+            return;
+        }
+        throw new AssertionError("Expected cooperative cancellation");
+    }
+    @Test
+    public void cancellationAfterLastMeasurementDoesNotWriteTags() {
+        Track a = track("/a.flac", "Album", -10.0);
+        int[] checks = {0};
+        try {
+            tagger.tag(List.of(a), listener, () -> ++checks[0] > 1);
+        } catch (java.util.concurrent.CancellationException expected) {
+            assertTrue(written.isEmpty());
+            return;
+        }
+        throw new AssertionError("Expected cancellation before writes");
+    }
+
+    @Test
+    public void cancellationDuringWritesFinishesAlbumConsistently() {
+        Track a = track("/a.flac", "Album", -10.0);
+        Track b = track("/b.flac", "Album", -14.0);
+        library = Arrays.asList(a, b);
+        tagger.tag(library, listener, () -> !written.isEmpty());
+        assertEquals(2, written.size());
+        assertNotNull(written.get("/a.flac")[1]);
+        assertNotNull(written.get("/b.flac")[1]);
+    }
+
 }

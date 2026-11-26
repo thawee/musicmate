@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.abs
 
-private val LEVELING_KEYS = setOf(
+internal val LEVELING_KEYS = setOf(
     Constants.PREF_REPLAYGAIN_MODE,
     Constants.PREF_REPLAYGAIN_PREAMP,
     Constants.PREF_REPLAYGAIN_PREVENT_CLIPPING,
@@ -75,6 +75,7 @@ internal fun rememberLeveling(path: String?): Leveling? {
         onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
     val leveling by produceState<Leveling?>(null, path, settingsVersion) {
+        value = null
         value = path?.let { withContext(Dispatchers.IO) { ReplayGainManager.getInstance().leveling(context, it) } }
     }
     return leveling

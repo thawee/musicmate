@@ -1,13 +1,13 @@
-# MusicMate 3.34.1
+# MusicMate 3.35.0
 
-**Meet MateTune.** Headphone and speaker tuning now share a clearer name across settings and playback controls. Choose Gentle V for a lighter bass-and-treble lift, inspect combined EQ and headroom, and compare sound modes with estimated level matching.
+**ReplayGain, easier to use.** Tap the playback leveling status to see track and album tags. Measure missing values for a track, album or library, with progress, cancellation and retry. Tag presence and applied gain are shown separately.
 
-**Quiet listening.** A new optional strength control adds gentle bass and a little treble for low-volume listening. It starts off, saves your setting for the output, and works independently of volume leveling and Night listening. Reduce strength as listening volume increases.
+**Matching playback controls.** Output opens player selection; MateTune opens tuning. Both use the same card style and full-card tap targets. Narrow screens and large text use stacked cards, with scrolling track details and fixed playback controls.
 
-**Smoother volume leveling.** ReplayGain settings and peak protection work together through the audio path, with coverage for track transitions and output formats.
+**Cleaner audio measurements.** Refined level and RMS presentation makes the analysis screen easier to read.
 
-**Clearer audio analysis.** The updated analysis screen separates file fidelity from mastering measurements and makes peak details easier to inspect.
+**Reliable tag updates.** Newly measured tags refresh automatically, and album retries retain the complete album group. A real FLAC check confirmed that writing ReplayGain tags preserved decoded audio samples.
 
-Version code: 163. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.34.1/CHANGELOG.md) for details.
+Version code: 164. See [CHANGELOG.md](https://github.com/thawee/musicmate/blob/v3.35.0/CHANGELOG.md) for details.
 
-Validation covers automated DSP measurements and emulator behavior. Physical-device listening and DAC loopback checks remain pending.
+Validation includes automated tests and emulator checks, including 150% text. Physical-device listening and DAC loopback checks remain pending.

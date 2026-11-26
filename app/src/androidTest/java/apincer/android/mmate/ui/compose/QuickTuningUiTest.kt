@@ -158,7 +158,9 @@ class QuickTuningUiTest {
         val original = CarDspPreferences.state.value
         try {
             CarDspPreferences.update(context, original.copy(enabled = false, mode = SoundMode.REFERENCE))
-            compose.setContent { MusicMateTheme { LegacySpeakerSoundModes(compact = true) } }
+            compose.setContent { MusicMateTheme {
+                androidx.compose.foundation.layout.Column { LegacySpeakerSoundModes(compact = true) }
+            } }
             compose.onNodeWithText("Vocal").performClick()
             compose.runOnIdle {
                 assertEquals(SoundMode.VOCAL, CarDspPreferences.state.value.mode)
@@ -195,7 +197,7 @@ class QuickTuningUiTest {
         compose.onNodeWithContentDescription("MateTune").performClick()
         compose.onNodeWithText("MateTune · Quick").assertIsDisplayed()
         compose.onNodeWithContentDescription("Manage MateTune").performClick()
-        compose.onNodeWithText("MateTune").assertIsDisplayed()
+        compose.onAllNodesWithText("MateTune").onLast().assertIsDisplayed()
         compose.onNodeWithText("Correction").performScrollTo().performClick()
         compose.onNodeWithText("Calibrate your sound").performScrollTo().assertIsDisplayed()
         compose.onNodeWithContentDescription("Close MateTune").performClick()
@@ -210,7 +212,7 @@ class QuickTuningUiTest {
         compose.onNodeWithText("Listening").performScrollTo().performClick()
         compose.onNodeWithText("Create personal tuning").assertIsDisplayed()
         compose.onNodeWithText("Cancel").performClick()
-        compose.onNodeWithText("MateTune").assertIsDisplayed()
+        compose.onAllNodesWithText("MateTune").onLast().assertIsDisplayed()
         compose.onNodeWithText("MateTune · Quick").assertDoesNotExist()
         compose.onNodeWithText("Calibrate your sound").performScrollTo().assertIsDisplayed()
     }

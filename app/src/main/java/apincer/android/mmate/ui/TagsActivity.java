@@ -1697,17 +1697,41 @@ public class TagsActivity extends AppCompatActivity {
         });
     }
 
+    static void adaptVerificationLayout(View content) {
+        if (content.getResources().getConfiguration().fontScale < 1.3f) return;
+        android.widget.LinearLayout details = content.findViewById(R.id.verification_details);
+        details.setOrientation(android.widget.LinearLayout.VERTICAL);
+        details.setWeightSum(0);
+        content.findViewById(R.id.verification_separator).setVisibility(GONE);
+        for (int id : new int[]{R.id.verification_format, R.id.verification_analytics}) {
+            View section = content.findViewById(id);
+            section.setLayoutParams(new android.widget.LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+        View analytics = content.findViewById(R.id.verification_analytics);
+        analytics.setPadding(0, (int) (12 * content.getResources().getDisplayMetrics().density), 0, 0);
+    }
+
+    private static String formatVerificationLevel(double value) {
+        if (value == Double.NEGATIVE_INFINITY) return "−∞"; // Digital silence.
+        if (!Double.isFinite(value)) return "—";
+        return String.format(Locale.ENGLISH, "%.1f", value).replace('-', '−');
+    }
+
     @SuppressLint("SetTextI18n")
     private void doShowSpectrum() {
         if (getEditItems().isEmpty()) return;
 
         Track track = getEditItems().get(0);
         View cview = getLayoutInflater().inflate(R.layout.view_action_spectrum, null);
+        adaptVerificationLayout(cview);
 
         TextView formatLabel = cview.findViewById(R.id.format_labels);
         TextView formatText = cview.findViewById(R.id.format_values);
         TextView analyticsLabel = cview.findViewById(R.id.analytics_labels);
         TextView analyticsText = cview.findViewById(R.id.analytics_values);
+        TextView peakValue = cview.findViewById(R.id.sampled_peak_value);
+        TextView rmsValue = cview.findViewById(R.id.sampled_rms_value);
         TextView filenameText = cview.findViewById(R.id.filename);
         TextView qualityScore = cview.findViewById(R.id.quality_score);
         ImageView spectrumView = cview.findViewById(R.id.spectrum_view);
@@ -1751,9 +1775,7 @@ public class TagsActivity extends AppCompatActivity {
         analyticsSpan.append("ANALYTICS\n", labelColor, textSize, true);
         analyticsSpan.append("  Nyquist:\n", labelColor, textSize, true);
         analyticsSpan.append("  Cutoff:\n", labelColor, textSize, true);
-        analyticsSpan.append("  Dynamic Range:\n", labelColor, textSize, true);
-        analyticsSpan.append("  Peak:\n", labelColor, textSize, true);
-        analyticsSpan.append("  RMS Level:", labelColor, textSize, true);
+        analyticsSpan.append("  Range:", labelColor, textSize, true);
         analyticsLabel.setText(analyticsSpan.build());
 
         qualityScore.setText(R.string.analyzing);
@@ -1762,6 +1784,7 @@ public class TagsActivity extends AppCompatActivity {
         final boolean fullReport = apincer.android.mmate.pro.Pro.isPro(this);
         if (!fullReport) {
             spectrumView.setVisibility(GONE);
+            cview.findViewById(R.id.sampled_levels).setVisibility(GONE);
             analyticsLabel.setText(getString(R.string.pro_report_locked));
         }
 
@@ -1806,11 +1829,8 @@ public class TagsActivity extends AppCompatActivity {
                             textValue = dr == null || dr.isEmpty() ? "-" : "DR" + dr;
                             analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
 
-                            textValue = Double.isNaN(r.peak) ? "-" : String.format(Locale.ENGLISH,"%.2f dBFS", r.peak);
-                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
-
-                            textValue = Double.isNaN(r.rms) ? "-" : String.format(Locale.ENGLISH,"%.2f dBFS", r.rms);
-                            analyticsSpan.append(textValue+"\n", valueColor, textSize, false);
+                            peakValue.setText(formatVerificationLevel(r.peak));
+                            rmsValue.setText(formatVerificationLevel(r.rms));
 
                             analyticsText.setText(analyticsSpan.build());
 

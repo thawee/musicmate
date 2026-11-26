@@ -8,6 +8,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import apincer.music.core.model.AudioTag
 import org.junit.Assert.assertTrue
@@ -23,6 +24,7 @@ class PlaybackTuningUiTest {
     @Test fun rendererEntryRemainsReachableAtLargeText() = verifyEntry(1.5f, "renderer-large", "Living Room")
 
     private fun verifyEntry(scale: Float, name: String, renderer: String? = null) {
+        var outputClicks = 0
         val deviceBadge = if (renderer != null) "DLNA" else "USB AUDIO"
         val state = NowPlayingState().apply {
             track.value = AudioTag(9876).apply {
@@ -39,11 +41,25 @@ class PlaybackTuningUiTest {
                 val density = LocalDensity.current.density
                 CompositionLocalProvider(LocalDensity provides Density(density, scale)) {
                     NowPlayingPage(state, onPlayPause = {}, onNext = {}, onPrevious = {},
-                        onShuffleToggle = {}, onRepeatToggle = {}, onSeek = {}, onTrackClicked = {})
+                        onShuffleToggle = {}, onRepeatToggle = {}, onSeek = {}, onTrackClicked = {},
+                        onSelectTargetPlayer = { outputClicks++ })
                 }
             }
         }
-        val chip = compose.onNodeWithContentDescription("MateTune").assertIsDisplayed()
+        compose.onNodeWithText("So What", useUnmergedTree = true).assertIsDisplayed()
+        if (scale > 1f) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation
+                .executeShellCommand("screencap -p /sdcard/Download/dsp-playback-$name-initial.png")
+                .let { ParcelFileDescriptor.AutoCloseInputStream(it).use { s -> s.readBytes() } }
+            compose.onNode(hasScrollAction()).performTouchInput { swipeUp() }
+            compose.onNodeWithText("Tap to flip back").assertDoesNotExist()
+            compose.onNodeWithContentDescription("Play").assertIsDisplayed()
+        }
+        val output = compose.onNodeWithContentDescription("Output").performScrollTo().assertIsDisplayed().assertHasClickAction()
+        output.assertHeightIsAtLeast(48.dp)
+        output.performClick()
+        compose.runOnIdle { org.junit.Assert.assertEquals(1, outputClicks) }
+        val chip = compose.onNodeWithContentDescription("MateTune").performScrollTo().assertIsDisplayed()
         val label = compose.onNode(SemanticsMatcher("compact mode and status label") { node ->
             node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.any {
                 it.text.matches(Regex("^(Neutral|Warm|Vocal|Lively|Custom) · (On|Bypassed|Unavailable)$"))
@@ -51,13 +67,24 @@ class PlaybackTuningUiTest {
         }, useUnmergedTree = true).assertIsDisplayed()
         val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
         label.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
-        assertTrue("Mode and status must remain a readable single line", layouts.single().lineCount == 1 && !layouts.single().hasVisualOverflow)
+        val layout = layouts.single()
+        // Check rendered line bounds: paragraph width can retain the larger measurement
+        // constraint even when Text wraps its layout to the shorter intrinsic width.
+        assertTrue("Mode and status must wrap without clipping", layout.lineCount <= 2 &&
+            !layout.didOverflowHeight && (0 until layout.lineCount).all { line ->
+                !layout.isLineEllipsized(line) && layout.getLineLeft(line) >= -1f &&
+                    layout.getLineRight(line) <= layout.size.width + 1f
+            })
         val bounds = chip.fetchSemanticsNode().boundsInRoot
+        val outputBounds = output.fetchSemanticsNode().boundsInRoot
+        assertTrue("Output and MateTune share their width", kotlin.math.abs(outputBounds.width - bounds.width) < 2f)
+        if (outputBounds.top < bounds.top) assertTrue("Stacked destinations must not overlap", outputBounds.bottom <= bounds.top)
+        else assertTrue("Side-by-side destinations share their height", kotlin.math.abs(outputBounds.height - bounds.height) < 2f)
         val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
         assertTrue("Tuning entry must fit inside playback", bounds.left >= root.left && bounds.right <= root.right)
         val density = InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.density
         assertTrue("Tuning entry needs a 48dp target", bounds.height >= 48f * density - 1f)
-        val badge = compose.onNodeWithText(deviceBadge).fetchSemanticsNode().boundsInRoot
+        val badge = compose.onNodeWithText(deviceBadge, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         if (renderer != null) compose.onNodeWithText("Not applied to this player", useUnmergedTree = true).assertIsDisplayed()
         assertTrue("Device badge must remain a single readable line", badge.height <= bounds.height)
         val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation

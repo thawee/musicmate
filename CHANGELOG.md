@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.35.0] - 2026-11-26
+
+### Added
+- **ReplayGain repair:** Tap the playback leveling status to inspect track and album tags, measure missing values, or repair missing tags across the library. Progress, cancellation and retry are supported.
+
+### Changed
+- **Playback controls:** Output and MateTune share matching actionable cards, with clear player and tuning status. Cards stack on narrow screens and at large text sizes; track details and audio controls scroll while transport stays fixed.
+- **Volume leveling:** ReplayGain inspection and repair are accessible from playback details, Music Center, fullscreen playback, track information and MateTune quick controls. Tag presence is distinguished from applied gain.
+- **Audio analysis:** Cleaner level and RMS presentation with clearer units and expandable measurement details.
+
+### Fixed
+- **ReplayGain refresh and retry:** Updated tags invalidate cached metadata; retry retains complete album groups and cancellation preserves consistency during album writes.
+
+### Validation
+- Emulator checks cover compact and large-text layouts, control actions, scrolling, repair and cancellation. A real FLAC tag-writing check confirmed identical decoded PCM before and after measurement. Automated checks do not establish audible superiority.
+
 ## [3.34.1] - 2026-11-25
 
 ### Fixed

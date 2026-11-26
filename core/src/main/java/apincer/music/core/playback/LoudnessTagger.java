@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.function.BooleanSupplier;
 
 import apincer.music.core.codec.FFMpegHelper;
 import apincer.music.core.model.Track;
@@ -70,9 +72,16 @@ public final class LoudnessTagger {
      * library track of the album measured.
      */
     public void tag(List<Track> album, Listener listener) {
+        tag(album, listener, () -> false);
+    }
+
+    /** Measures with cooperative cancellation between tracks. Once writes start, the album write
+     * phase completes so cancellation cannot leave only part of the album with new album gain. */
+    public void tag(List<Track> album, Listener listener, BooleanSupplier cancelled) {
         Loudness[] measured = new Loudness[album.size()];
         List<Loudness> all = new ArrayList<>(album.size());
         for (int i = 0; i < album.size(); i++) {
+            if (cancelled.getAsBoolean()) throw new CancellationException();
             Track track = album.get(i);
             listener.onMeasuring(track);
             measured[i] = meter.measure(track);
@@ -82,6 +91,7 @@ public final class LoudnessTagger {
                 all.add(measured[i]);
             }
         }
+        if (cancelled.getAsBoolean()) throw new CancellationException();
         if (all.isEmpty()) return;
         Loudness albumLoudness = all.size() == album.size() && coversAlbum(album, albums.tracksOf(album.get(0)))
                 ? Loudness.album(all) : null;

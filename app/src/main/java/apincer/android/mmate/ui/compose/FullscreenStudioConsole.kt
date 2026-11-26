@@ -691,7 +691,6 @@ fun FullscreenStudioConsole(
                         } else encodedResolution
                         val originalRate = AudioPresentation.originalRate(track)
                         val drStr = state.specsDr.value.ifEmpty { if (track?.dynamicRange != null && track.dynamicRange > 0) "DR ${(track.dynamicRange).toInt()}" else "" }
-                        val leveling = levelingStatus(rememberLeveling(track?.path), state.remoteTarget.value)
 
                         // Nothing loaded: an empty verdict would read as "CD QUALITY"
                         if (track != null || state.specsVerdict.value.isNotBlank()) FlowRow(
@@ -708,8 +707,7 @@ fun FullscreenStudioConsole(
                             if (resStr.isNotEmpty()) StudioSpecChip(resStr)
                             if (originalRate.isNotEmpty()) StudioSpecChip("Original: $originalRate")
                             if (drStr.isNotEmpty()) StudioSpecChip(drStr)
-                            if (leveling != null) StudioSpecChip(leveling.text,
-                                modifier = Modifier.semantics { contentDescription = leveling.description })
+                            LevelingStatusButton(track, state.remoteTarget.value)
                         }
                     }
 

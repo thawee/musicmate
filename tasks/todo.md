@@ -1611,3 +1611,36 @@ Release publication recovery: v3.34.0 and commit 1f5e9dcd pushed. Workflow 45581
 3.34.1 local verification: optimized Github release rebuilt successfully after removing resolver (302 tasks executed); /tmp/musicmate-3.34.1-release-check.log. No audio/UI source changed from verified 3.34.0.
 
 Publication complete: release commit 1f5e9dcd, build fix 3aa75abb, branch play-storage and annotated tags v3.34.0/v3.34.1 pushed. GitHub workflow 45582265185 succeeded; https://github.com/thawee/musicmate/releases/tag/v3.34.1 is public with MusicMate-v3.34.1.apk (48,249,396 bytes). Downloaded asset verified by apksigner: production MusicMate certificate SHA-256 b5757a1ecce6cf1a5a9476c97432640764025f3c352d88824b268674ca1d29ee; package apincer.android.mmate, versionCode 163/versionName 3.34.1-261125, MANAGE_EXTERNAL_STORAGE present. Optimized 3.34.1 local smoke APK updated emulator successfully; cold launch Status ok (694 ms). Production APK was not installed over the emulator debug-signed package. Physical listening remains pending.
+
+## Verify Lossless Quality RMS presentation (2026-11-26)
+- [x] Separate Peak and RMS from cramped analytics columns; use aligned values and quieter units.
+- [x] Preserve sampled-measurement meaning and Pro gating; handle unavailable levels cleanly.
+- [x] Build and inspect rendered layout on emulator, including enlarged text.
+- [x] Stack details at font scale >= 1.3 and scroll the content to keep actions reachable.
+Validation: :app:assembleGithubDebug and :app:assembleGithubDebugAndroidTest passed. LosslessLevelsLayoutTest passed on emulator-5554 at 320 dp with 100%/150% text, including full bottom-action visibility after scrolling. Visually reviewed normal/large layouts in out/validation/lossless-levels. Probe corrections: preserve full app theme and disable animation for synchronous scroll assertion. UI only; no audio processing changes.
+
+## ReplayGain access and repair (2026-11-26)
+- [x] Inspect metadata, measurement, album and library-filter paths; reuse existing operations.
+- [x] Add a tappable Now Playing status and focused leveling sheet with accurate tag/application states.
+- [x] Add track/album repair, progress/cancel/retry, automatic refresh and useful missing-tag library access.
+- [x] Correct misleading tag-presence labels and verify real measurement behavior.
+- [x] Build, run targeted tests, and inspect compact/large-text UI and gestures.
+
+Validation: 26 targeted core tests passed; GitHub debug app and instrumentation APKs built. Seven emulator tests passed, covering status entry, track/album actions, library repair, real body swipes, cancellation, album retry, and real FLAC tag writing with identical decoded PCM SHA-256 before/after. The large-text flow also passed separately with Android system font_scale=1.5 at 320 dp; screenshot reviewed at out/validation/replaygain/large-text-system-150.png. Emulator display/font overrides restored. Review findings fixed: retry retains original album groups; scanning publishes metadata refresh. Scoped changes compared against main and git diff --check passed. Existing RMS UI changes preserved; no commit or release performed.
+
+## Matching Output and MateTune controls (2026-11-26)
+- [x] Inspect shared Playback / Music Center entry points and current sound status.
+- [x] Reuse one accessible control style for Output and MateTune, with adaptive layout and clear destinations.
+- [x] Preserve ReplayGain repair access and keep technical status subordinate.
+- [x] Build and verify actions, compact layout, and large text on emulator.
+
+Validation: GitHub debug and instrumentation APKs built. Seven compact emulator checks passed for Playback, transport and Music Center; four wide-layout checks passed, including real swipes without triggering the artwork flip. A separate 320 dp / Android font_scale=1.5 check passed with title visibility, scroll access and fixed transport. Fourteen quick-tuning checks passed during the combined run; two old playback assertions were corrected to inspect rendered text bounds and unmerged badge text, then all affected playback checks passed. Speaker-mode fixture now uses the production Column layout so sibling controls do not overlap. Screenshots reviewed in out/validation/audio-controls (wide-normal.png and system-large-initial.png). Emulator overrides restored. Scoped diffs compared with main; git diff --check passed. Prior ReplayGain and RMS changes preserved. No commit or release performed.
+
+## Release 3.35.0 (2026-11-26)
+- [x] Review release scope, workflow and remote branch/tag state.
+- [x] Update version code/name and release notes.
+- [x] Build optimized release and run relevant unit checks; retain prior emulator evidence.
+- [ ] Commit intended source/tests/docs, push branch and annotated tag.
+- [ ] Verify remote commit/tag and GitHub release workflow publication.
+
+Validation: optimized GitHub release APK built successfully as 3.35.0-261126 (164). Core: 294 tests passed; app: 455 tests passed; no failures, errors or skipped tests. Prior emulator and decoded-PCM checks recorded above. Signed APK publication is handled by the tag-triggered GitHub release workflow.

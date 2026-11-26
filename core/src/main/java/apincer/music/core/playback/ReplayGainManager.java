@@ -148,6 +148,11 @@ public class ReplayGainManager {
         }
     }
 
+    /** Drops one cached tag read so library scans can reflect changes made outside this process. */
+    public void invalidate(String filePath) {
+        if (filePath != null) cache.remove(filePath);
+    }
+
     /** Reads the leveling settings and this file's tags; does file I/O on a cache miss. */
     public Leveling leveling(Context context, String path) {
         if (context == null || path == null) return Leveling.OFF;

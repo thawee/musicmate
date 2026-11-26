@@ -33,7 +33,7 @@ import apincer.android.mmate.audio.calibration.CalibrationOutput
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = false,
-    onManage: (() -> Unit)? = null, content: @Composable () -> Unit) {
+    onManage: (() -> Unit)? = null, title: String? = null, closeLabel: String? = null, content: @Composable () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -47,7 +47,7 @@ internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = f
         Column(Modifier.fillMaxWidth().then(if (compact) Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.86f) else Modifier.fillMaxHeight(0.94f))) {
             Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(if (compact) R.string.matetune_quick_title else R.string.nav_audio_tuning), Modifier.weight(1f),
+                Text(title ?: stringResource(if (compact) R.string.matetune_quick_title else R.string.nav_audio_tuning), Modifier.weight(1f),
                     fontSize = 22.sp, fontWeight = FontWeight.Medium)
                 onManage?.let { manage ->
                     IconButton(onClick = manage) {
@@ -56,7 +56,7 @@ internal fun AudioTuningSheet(onDismissRequest: () -> Unit, compact: Boolean = f
                     }
                 }
                 IconButton(onClick = onDismissRequest) {
-                    Icon(painterResource(R.drawable.round_close_24), stringResource(if (compact) R.string.matetune_close_quick else R.string.matetune_close),
+                    Icon(painterResource(R.drawable.round_close_24), closeLabel ?: stringResource(if (compact) R.string.matetune_close_quick else R.string.matetune_close),
                         tint = MusicMateDesignTokens.Text.Secondary)
                 }
             }

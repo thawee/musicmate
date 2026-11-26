@@ -62,6 +62,7 @@ internal fun QuickTuningControls(
             QuietListeningControl(status.binding.quietListening, canEnable, status.active && remoteTarget == null, onQuietListening)
         }
         VolumeLevelingControl(remoteTarget)
+        LevelingStatusButton(MainScaffoldState.get().nowPlayingState.track.value, remoteTarget)
         HorizontalDivider(color = MusicMateDesignTokens.Surfaces.BorderSubtle)
         TuningDisclosure("Correction", selectedName ?: "None · sound mode works independently") {
             CorrectionProfileSelector(choices, status.profile?.id, selectedName, output, canApply, onSelect,
