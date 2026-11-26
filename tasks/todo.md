@@ -1668,6 +1668,7 @@ Publication verified: release commit ea28ff18dc87d7b1e86afaa6779dc4c7228220a7 an
 ## Release 3.36.0 (2026-11-26)
 - [x] Review release scope and remote branch/tag; update version and release notes.
 - [x] Build release and verify version, permissions and existing test evidence.
-- [ ] Commit intended files; push branch and annotated tag.
-- [ ] Verify GitHub workflow publication, downloaded APK signature and manifest.
+- [x] Commit intended files; push branch and annotated tag.
+- [x] Verify GitHub workflow publication, downloaded APK signature and manifest.
 - Validation: optimized release build passed as 3.36.0-261126 (165); APK manifest confirms all-files access and local playback service retained, notification listener/accessibility binding/SMS absent. Prior source validation: 449 app unit tests and 18 emulator tests passed. Evidence: `out/validation/release-3.36.0/` and `out/validation/poweramp-intent-detection/`.
+- Publication verified: release commit `c9cde9fcab56aed1d16b1076c4dab3cf62b6a364` and annotated `v3.36.0` pushed atomically to origin/play-storage; remote tag resolves to that commit. GitHub Actions run `45770359911` completed successfully. Public release: https://github.com/thawee/musicmate/releases/tag/v3.36.0. Downloaded APK (48,299,996 bytes) passed apksigner verification with the same certificate as 3.35.0: SHA-256 `b5757a1ecce6cf1a5a9476c97432640764025f3c352d88824b268674ca1d29ee`. Published manifest confirms version 3.36.0-261126 / 165, storage access and playback retained, notification listener absent. Evidence saved under release validation directory. Installed Poweramp interoperability remains a physical-device check; Play Protect acceptance depends on Google assessment.
