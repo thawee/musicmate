@@ -36,6 +36,7 @@ interface SweepCapture {
  * exclusive focus pauses MusicMate's player for the duration.
  */
 class SweepRecorder(context: Context) : SweepCapture {
+    private val appContext = context.applicationContext
     private val audioManager = context.getSystemService(AudioManager::class.java)
     /** [builtIn] for the phone's own mic, which records when none is chosen. */
     data class Microphone(val id: Int, val name: String, val builtIn: Boolean = false)
@@ -60,6 +61,7 @@ class SweepRecorder(context: Context) : SweepCapture {
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     override fun capture(pcm: ShortArray, channels: Int, cancelled: () -> Boolean): Capture {
+        SimulatedRoom.capture(appContext, pcm, channels)?.let { return it }
         val lead = (RATE * LEAD_SECONDS).toInt()
         val total = lead + pcm.size / channels + (RATE * TAIL_SECONDS).toInt()
         val layout = if (channels == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO
