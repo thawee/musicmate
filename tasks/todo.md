@@ -1,8 +1,3 @@
-# Release 3.37.0 (2026-11-27)
-- [x] Bump version to 3.37.0 (code 166), move the Unreleased changelog entries under 3.37.0, and rewrite RELEASE_NOTES.md.
-- [x] Build assembleGithubRelease and confirm the APK has MANAGE_EXTERNAL_STORAGE and version 3.37.0.
-- [ ] Commit, tag v3.37.0, push play-storage and the tag, and confirm CI publishes the APK.
-
 # Google Play launch plan (2026-10-15, from the product strategy canvas)
 
 Goal: MusicMate on Google Play as freemium within about 12 weeks. First segment: streamer owners with no server (the phone serves the library to a DLNA renderer). Hook: the fake hi-res and DR check.

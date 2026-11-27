@@ -1,3 +1,9 @@
+# Release 3.37.0 (2026-11-27)
+- [x] Bump version to 3.37.0 (code 166), move the Unreleased changelog entries under 3.37.0, and rewrite RELEASE_NOTES.md.
+- [x] Build assembleGithubRelease and confirm the APK has MANAGE_EXTERNAL_STORAGE and version 3.37.0.
+- [x] Commit, tag v3.37.0, push play-storage and the tag, and confirm CI publishes the APK.
+  Published at https://github.com/thawee/musicmate/releases/tag/v3.37.0, signed with the release key b5:75:7a.
+
 # Done
 
 Sections moved from todo.md once every item was ticked.
