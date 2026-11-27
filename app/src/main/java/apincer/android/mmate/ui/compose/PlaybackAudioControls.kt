@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import apincer.android.mmate.R
 
+/** Stacked tiles on a narrow screen fold their detail into one line, so both fit above the controls. */
+private val LocalCompactTile = staticCompositionLocalOf { false }
+
 /** Matching destinations: where music plays and how it sounds. */
 @Composable
 internal fun AudioControlTile(
@@ -34,14 +39,15 @@ internal fun AudioControlTile(
     indicator: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
+    val compact = LocalCompactTile.current
     Surface(onClick = onClick,
-        modifier = modifier.heightIn(min = 72.dp).semantics(mergeDescendants = true) {
+        modifier = modifier.heightIn(min = if (compact) 56.dp else 72.dp).semantics(mergeDescendants = true) {
             contentDescription = title
             stateDescription = description
         }, shape = RoundedCornerShape(12.dp),
         color = MusicMateDesignTokens.Surfaces.GlassPill,
         border = BorderStroke(1.dp, MusicMateDesignTokens.Surfaces.BorderSubtle)) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+        Row(Modifier.padding(horizontal = 12.dp, vertical = if (compact) 8.dp else 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(icon), null, tint = accent, modifier = Modifier.size(20.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -50,9 +56,10 @@ internal fun AudioControlTile(
                         modifier = Modifier.weight(1f, fill = false))
                     indicator?.invoke()
                 }
-                Text(value, color = MusicMateDesignTokens.Text.Secondary, fontSize = 13.sp, lineHeight = 18.sp,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (!detail.isNullOrBlank()) Text(detail, color = MusicMateDesignTokens.Text.Secondary,
+                Text(if (compact) listOfNotNull(value, detail?.takeIf { it.isNotBlank() }).joinToString(" · ") else value,
+                    color = MusicMateDesignTokens.Text.Secondary, fontSize = 13.sp, lineHeight = 18.sp,
+                    maxLines = if (compact) 1 else 2, overflow = TextOverflow.Ellipsis)
+                if (!compact && !detail.isNullOrBlank()) Text(detail, color = MusicMateDesignTokens.Text.Secondary,
                     fontSize = 12.sp, lineHeight = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             Icon(painterResource(R.drawable.ic_expand_more), null,
@@ -67,9 +74,12 @@ internal fun AudioControlPair(modifier: Modifier = Modifier,
     val largeText = LocalDensity.current.fontScale >= 1.3f
     BoxWithConstraints(modifier.fillMaxWidth()) {
         if (maxWidth < 360.dp || largeText) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                output(Modifier.fillMaxWidth())
-                tuning(Modifier.fillMaxWidth())
+            // Large text keeps every line; it scrolls instead
+            CompositionLocalProvider(LocalCompactTile provides !largeText) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    output(Modifier.fillMaxWidth())
+                    tuning(Modifier.fillMaxWidth())
+                }
             }
         } else {
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

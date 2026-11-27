@@ -260,6 +260,21 @@ fun NowPlayingPage(
 
     val audioControlsDensity = androidx.compose.ui.platform.LocalDensity.current
     var audioControlsHeight by remember { mutableStateOf(160.dp) }
+    // Below large text the output and tuning tiles stay on screen and the artwork gives way; at large text they scroll with it
+    val controlsScroll = audioControlsDensity.fontScale >= 1.3f
+    val audioControls = @Composable {
+        PlaybackAudioControls(
+            outputName = remember(state.targetTitle.value) {
+                sanitizeTargetDeviceTitle(state.targetTitle.value.ifEmpty { "Local Audio" })
+            },
+            outputDetail = state.targetBadge.value.takeIf { it.isNotBlank() },
+            remoteTarget = state.remoteTarget.value,
+            onSelectOutput = onSelectTargetPlayer,
+            modifier = Modifier.onSizeChanged {
+                audioControlsHeight = with(audioControlsDensity) { it.height.toDp() }
+            }.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -275,7 +290,7 @@ fun NowPlayingPage(
     ) {
         // Keep metadata readable at large text sizes; only this region scrolls.
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
-            val artworkHeight = (maxHeight - audioControlsHeight)
+            val artworkHeight = (if (controlsScroll) maxHeight - audioControlsHeight else maxHeight)
                 .coerceAtLeast(200.dp * audioControlsDensity.fontScale)
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 state.playerSong.value?.let { PlayerSongCard(it) }
@@ -703,19 +718,10 @@ fun NowPlayingPage(
             }
         }
 
-        PlaybackAudioControls(
-            outputName = remember(state.targetTitle.value) {
-                sanitizeTargetDeviceTitle(state.targetTitle.value.ifEmpty { "Local Audio" })
-            },
-            outputDetail = state.targetBadge.value.takeIf { it.isNotBlank() },
-            remoteTarget = state.remoteTarget.value,
-            onSelectOutput = onSelectTargetPlayer,
-            modifier = Modifier.onSizeChanged {
-                audioControlsHeight = with(audioControlsDensity) { it.height.toDp() }
-            }.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+        if (controlsScroll) audioControls()
             }
         }
+        if (!controlsScroll) audioControls()
 
         // ── 2. TRANSPORT & SEEKBAR (Fixed at bottom) ────────────────────────
         Column(
