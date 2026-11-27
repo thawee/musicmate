@@ -147,9 +147,7 @@ internal fun TuningResponseCurve(bands: List<apincer.android.mmate.audio.dsp.Peq
             CorrectionCurve(bands, settings = settings)
             if (settings != null) {
                 val preamp = androidx.compose.runtime.remember(settings) {
-                    apincer.android.mmate.audio.dsp.DspChain(settings.bands, 48_000, 2,
-                        settings.requestedPreampDb, settings.leftBands, settings.rightBands,
-                        settings.balanceDb, settings.monoBands, settings.crossfeed).preampDb
+                    apincer.android.mmate.audio.dsp.DspChain.of(settings, 48_000, 2).preampDb
                 }
                 TuningHint("Headroom attenuation: %.1f dB · 48 kHz preview".format(-preamp))
                 TuningHint("Correction + sound mode · left: gold, right: grey. Curve excludes headroom, balance and crossfeed.")

@@ -114,9 +114,7 @@ private fun legacySpeakerAudibility(available: Boolean, enabled: Boolean, remote
 internal fun CorrectionCurve(bands: List<apincer.android.mmate.audio.dsp.PeqBand>, modifier: Modifier = Modifier,
     settings: apincer.android.mmate.audio.dsp.CarDspSettings? = null) {
     val curves = remember(bands, settings) {
-        val chain = if (settings == null) DspChain(bands, 48_000, 2) else DspChain(settings.bands,
-            48_000, 2, settings.requestedPreampDb, settings.leftBands, settings.rightBands,
-            settings.balanceDb, settings.monoBands, settings.crossfeed)
+        val chain = if (settings == null) DspChain(bands, 48_000, 2) else DspChain.of(settings, 48_000, 2)
         List(2) { channel -> DoubleArray(CURVE_POINTS) {
             chain.channelResponseDb(20.0 * Math.pow(1_000.0, it / (CURVE_POINTS - 1.0)), channel)
         } }

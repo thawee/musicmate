@@ -1,6 +1,7 @@
 package apincer.android.mmate.audio.calibration
 
 import apincer.android.mmate.audio.dsp.PeqBand
+import apincer.android.mmate.audio.dsp.StereoCorrection
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -34,7 +35,9 @@ data class CarProfile(
     /** Noisy 1/3-octave band centres, excluded from fitting and verification. */
     val excludedBandsHz: List<Double> = emptyList(),
     /** [SpeakerTarget.id] the fit aimed for; profiles saved before targets could be chosen aimed for the car curve. */
-    val targetId: String = SpeakerTarget.CAR.id
+    val targetId: String = SpeakerTarget.CAR.id,
+    /** Set when each side was measured on its own; [bands] and the curves stay the combined fit. */
+    val stereo: StereoCorrection? = null
 ) {
     companion object {
         const val KIND_CAR = "car"

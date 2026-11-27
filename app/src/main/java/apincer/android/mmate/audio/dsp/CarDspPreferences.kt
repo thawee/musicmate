@@ -17,6 +17,8 @@ data class CarDspChoice(
     val trebleDb: Double = 0.0,
     /** The active car profile's correction; empty until a car is calibrated. */
     val correction: List<PeqBand> = emptyList(),
+    /** Replaces [correction] on two-channel tracks when the car was measured side by side. */
+    val stereo: StereoCorrection? = null,
     val profileName: String? = null,
     val profileId: String? = null,
     val nightListening: Boolean = false,
@@ -26,7 +28,8 @@ data class CarDspChoice(
     fun settings(comparingCustom: Boolean = false): CarDspSettings? {
         if (!enabled) return null
         val personal = if (comparingCustom && mode == SoundMode.CUSTOM) emptyList() else mode.bands(bassDb, trebleDb)
-        return CarDspSettings(correction + personal + QuietListening.bands(quietListening), compress = nightListening)
+        return (stereo?.settings(correction) ?: CarDspSettings(correction))
+            .with(personal + QuietListening.bands(quietListening), compress = nightListening)
     }
 }
 
@@ -189,6 +192,7 @@ object CarDspPreferences {
             bassDb = if (legacyBass) 4.0 else if (prefs.contains(key(BASS, id))) prefs.getFloat(key(BASS, id), 0f).toDouble() else current.bassDb,
             trebleDb = if (prefs.contains(key(TREBLE, id))) prefs.getFloat(key(TREBLE, id), 0f).toDouble() else current.trebleDb,
             correction = profile?.bands ?: emptyList(),
+            stereo = profile?.stereo,
             profileName = profile?.name,
             profileId = id,
             nightListening = legacyNight || prefs.getBoolean(key(NIGHT, id), false),

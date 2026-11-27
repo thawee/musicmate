@@ -167,11 +167,9 @@ object HeadphoneDsp {
         val personal = if (mode == SoundMode.CUSTOM) {
             if (comparingCustom) emptyList() else HeadphoneTone(bassDb = binding.bassDb, trebleDb = binding.trebleDb).bands()
         } else mode.bands()
-        val correction = profile?.manual?.settings()
+        val correction = profile?.manual?.settings() ?: profile?.stereo?.settings(profile.bands)
             ?: CarDspSettings(profile?.bands.orEmpty(), requestedPreampDb = profile?.preampDb ?: 0.0)
-        return CarDspSettings(correction.bands + personal + QuietListening.bands(binding.quietListening), compress = binding.nightListening,
-            requestedPreampDb = correction.requestedPreampDb, leftBands = correction.leftBands,
-            rightBands = correction.rightBands, balanceDb = correction.balanceDb, monoBands = correction.monoBands,
+        return correction.with(personal + QuietListening.bands(binding.quietListening), compress = binding.nightListening,
             crossfeed = binding.crossfeed)
     }
 }

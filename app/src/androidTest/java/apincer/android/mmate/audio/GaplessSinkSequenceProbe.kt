@@ -103,7 +103,8 @@ class GaplessSinkSequenceProbe {
         assumeTrue("no built-in speaker route", speaker.isNotEmpty())
         val savedTarget = CarDsp.target
         CarDsp.updateRoute(speaker)
-        CarDsp.target = CarDspSettings(listOf(PeqBand(PeqBand.Type.PEAK, 1000.0, 3.0, 1.0)))
+        // A side delay too: its ring must not carry the old track into the new one
+        CarDsp.target = CarDspSettings(listOf(PeqBand(PeqBand.Type.PEAK, 1000.0, 3.0, 1.0)), rightDelayMs = 1.5)
         val ended = CountDownLatch(1)
         var player: ExoPlayer? = null
         try {

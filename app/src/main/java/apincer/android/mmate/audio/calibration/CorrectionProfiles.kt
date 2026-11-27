@@ -17,7 +17,8 @@ data class CorrectionProfileChoice(val id: String, val name: String, val output:
 object CorrectionProfiles {
     fun fromSpeaker(profile: CarProfile) = HeadphoneProfile(
         id = "speaker:${profile.id}", name = profile.name, source = "Microphone · ${profile.micSource}",
-        preampDb = 0.0, bands = profile.bands, output = CalibrationOutput.SPEAKER, method = CalibrationMethod.MICROPHONE)
+        preampDb = 0.0, bands = profile.bands, output = CalibrationOutput.SPEAKER, method = CalibrationMethod.MICROPHONE,
+        stereo = profile.stereo)
 
     fun choices(speakers: List<CarProfile>, profiles: List<HeadphoneProfile>): List<CorrectionProfileChoice> =
         (profiles + speakers.map(::fromSpeaker).filter { converted -> profiles.none { it.id == converted.id } })

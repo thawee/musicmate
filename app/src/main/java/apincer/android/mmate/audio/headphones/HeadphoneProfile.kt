@@ -3,6 +3,7 @@ package apincer.android.mmate.audio.headphones
 import apincer.android.mmate.audio.dsp.PeqBand
 import apincer.android.mmate.audio.dsp.QuietListening
 import apincer.android.mmate.audio.dsp.SoundMode
+import apincer.android.mmate.audio.dsp.StereoCorrection
 import apincer.android.mmate.audio.calibration.CalibrationOutput
 import apincer.android.mmate.audio.calibration.CalibrationMethod
 import kotlinx.serialization.Serializable
@@ -17,7 +18,9 @@ data class HeadphoneProfile(
     val bands: List<PeqBand>,
     val manual: ManualHeadphoneTuning? = null,
     val output: CalibrationOutput = CalibrationOutput.HEADPHONE,
-    val method: CalibrationMethod = CalibrationMethod.AUTO_EQ
+    val method: CalibrationMethod = CalibrationMethod.AUTO_EQ,
+    /** A speaker measured side by side; [bands] stay the combined correction for other layouts. */
+    val stereo: StereoCorrection? = null
 ) {
     val calibrationMethod: CalibrationMethod get() = if (manual != null) CalibrationMethod.LISTENING else method
 

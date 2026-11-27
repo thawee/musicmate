@@ -111,14 +111,14 @@ class HeadphoneStereoDspTest {
     }
 
     @Test
-    fun monoCorrectionAppliesOnlyToMonoIncludingCommonHeadroom() {
+    fun monoCorrectionAppliesToEveryLayoutWithoutSidesIncludingCommonHeadroom() {
         val monoCut = listOf(peak(1_000.0, -6.0))
         for (channels in intArrayOf(1, 2, 6)) {
             val chain = DspChain(shared, rate, channels, monoBands = monoCut)
             val measured = toneResponse(chain, 1_000.0, channels)
-            val expected = if (channels == 1) -3.0 else 0.0
+            val expected = if (channels == 2) 0.0 else -3.0
             for (gain in measured) assertEquals(expected, gain, 0.02)
-            assertEquals(if (channels == 1) 0.0 else -3.0, chain.preampDb, 0.01)
+            assertEquals(if (channels == 2) -3.0 else 0.0, chain.preampDb, 0.01)
         }
         val boosted = DspChain(shared, rate, 1, monoBands = left)
         assertEquals(-9.0, boosted.preampDb, 0.01)

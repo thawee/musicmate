@@ -74,6 +74,11 @@ class CarProfileStoreTest {
         assertEquals(SpeakerTarget.CAR, SpeakerTarget.of(store.get("old")!!.targetId))
         store.save(profile("room", 2).copy(targetId = SpeakerTarget.ROOM.id))
         assertEquals(SpeakerTarget.ROOM, SpeakerTarget.of(store.get("room")!!.targetId))
+        assertEquals(null, store.get("old")!!.stereo)
+        val stereo = apincer.android.mmate.audio.dsp.StereoCorrection(
+            listOf(PeqBand(PeqBand.Type.PEAK, 80.0, -5.0, 2.0)), emptyList(), rightDelayMs = 1.25, balanceDb = 1.5)
+        store.save(profile("sides", 3).copy(stereo = stereo))
+        assertEquals(stereo, store.get("sides")!!.stereo)
     }
 
     @Test

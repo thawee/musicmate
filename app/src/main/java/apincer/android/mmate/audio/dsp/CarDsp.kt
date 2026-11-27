@@ -26,12 +26,21 @@ class CarDspSettings(
     rightBands: List<PeqBand> = emptyList(),
     val balanceDb: Double = 0.0,
     monoBands: List<PeqBand> = emptyList(),
-    val crossfeed: Boolean = false
+    val crossfeed: Boolean = false,
+    /** Stereo only, in [0, DspChain.MAX_DELAY_MS]: delays the side the sound reaches first. */
+    val leftDelayMs: Double = 0.0,
+    val rightDelayMs: Double = 0.0
 ) {
     val bands: List<PeqBand> = bands.toList()
     val leftBands: List<PeqBand> = leftBands.toList()
     val rightBands: List<PeqBand> = rightBands.toList()
     val monoBands: List<PeqBand> = monoBands.toList()
+
+    /** This correction with [shared] added to every channel; the per-side parts are kept. */
+    fun with(shared: List<PeqBand> = emptyList(), compress: Boolean = this.compress,
+             requestedPreampDb: Double = this.requestedPreampDb, crossfeed: Boolean = this.crossfeed) =
+        CarDspSettings(bands + shared, compress, requestedPreampDb, leftBands, rightBands, balanceDb, monoBands,
+            crossfeed, leftDelayMs, rightDelayMs)
 }
 
 /**
@@ -142,10 +151,7 @@ class CarDspProcessor(
         return dspActive || gain != 1.0 || gainTarget != 1.0
     }
 
-    private fun chainFor(settings: CarDspSettings?): DspChain? = settings?.let {
-        DspChain(it.bands, sampleRate, channels, it.requestedPreampDb, it.leftBands, it.rightBands, it.balanceDb,
-            it.monoBands, it.crossfeed)
-    }
+    private fun chainFor(settings: CarDspSettings?): DspChain? = settings?.let { DspChain.of(it, sampleRate, channels) }
 
     /** After a seek: clear filter state and land on the current target without a fade. */
     fun reset() {

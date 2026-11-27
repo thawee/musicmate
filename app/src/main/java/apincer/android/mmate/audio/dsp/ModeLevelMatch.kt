@@ -7,8 +7,7 @@ import kotlin.math.pow
  * This is a repeatable EQ comparison, not a measurement of the playing song's loudness.
  */
 internal object ModeLevelMatch {
-    private fun chain(s: CarDspSettings) = DspChain(s.bands, 48_000, 2,
-        s.requestedPreampDb, s.leftBands, s.rightBands, s.balanceDb, s.monoBands, s.crossfeed)
+    private fun chain(s: CarDspSettings) = DspChain.of(s, 48_000, 2)
 
     internal fun energyDb(s: CarDspSettings): Double {
         val chain = chain(s)
@@ -29,7 +28,6 @@ internal object ModeLevelMatch {
         val source = if (hearCorrection) correction else selected
         val extraCut = minOf(selectedEnergy, correctionEnergy) -
             if (hearCorrection) correctionEnergy else selectedEnergy
-        return CarDspSettings(source.bands, source.compress, chain(source).preampDb + extraCut,
-            source.leftBands, source.rightBands, source.balanceDb, source.monoBands, source.crossfeed)
+        return source.with(requestedPreampDb = chain(source).preampDb + extraCut)
     }
 }
