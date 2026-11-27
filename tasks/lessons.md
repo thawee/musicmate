@@ -567,4 +567,4 @@
 - Verify UI and processing gates before claiming sound modes work without correction; cover the no-profile path in tests.
 
 - Treat repeated reports of clutter as a hierarchy problem: review the whole rendered tuning flow, reduce competing sections and management actions before adding more copy or controls.
-- **Check history before recommending a feature:** I recommended a USB bit-perfect mode that 3.26.0 had already removed, because the user's Galaxy S25 exposes no Android bit-perfect mixer. Before proposing or starting a feature, grep tasks/done.md, CHANGELOG.md and git log for an earlier attempt and why it ended.
+- **Check history before recommending a feature:** I recommended a USB bit-perfect mode that 3.26.0 had already removed, because the user's Galaxy S25 exposes no Android bit-perfect mixer. Before proposing or starting a feature, grep tasks/done.md, CHANGELOG.md and git log for an earlier attempt and why it ended. It happened again on 2026-11-27, when bit-perfect was offered as an open question and the user chose to build it. Run that grep for every option before asking the user to choose, not only before recommending one.
