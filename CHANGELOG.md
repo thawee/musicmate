@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Experimental — held from release
+- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
+- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
+
+## [3.37.0] - 2026-11-27
+
 ### Added
 - **Per-side speaker tuning:** A speaker tuning plays the sweep through the left side and then the right at each spot, and gives each side its own correction. The louder side plays quieter to match, compared once each side's correction is on, and the side heard first waits up to 6 ms so both reach the centre seat together. Mono and multichannel tracks keep one combined correction.
 - **Tuning target:** The result offers Car, Room (2013 listening-room preference) and Flat. Changing it refits the same sweeps; older profiles load as Car.
@@ -22,10 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MateTune clicks:** Gapless track changes keep the EQ and limiter running, the limiter fades in and out, and the ReplayGain clip guard no longer pushes tracks into the limiter.
 - **Calibration measurements:** The mic's gain control, noise suppression and echo cancelling are off during sweeps, and the check compares against the centre take at the same spot.
 - **Calibration checklist:** Spacing above the microphone headings, a tick on the built-in mic that records by default, and kHz values that no longer break across lines.
-
-### Experimental — held from release
-- **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
-- **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
 ## [3.36.0] - 2026-11-26
 
