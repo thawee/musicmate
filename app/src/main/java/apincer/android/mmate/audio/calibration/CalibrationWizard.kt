@@ -46,10 +46,16 @@ class CalibrationWizard internal constructor(
     private var identity: CarRoute.Identity? = null
     private var endpoint: HeadphoneEndpoint? = null
     private var rigTarget: RigTarget? = null
+    private var micCalibration: MicCalibration? = null
+    private val micDb get() = micCalibration?.curveDb
     private var fixtureName = "Headphone fixture/coupler"
     val microphones: List<SweepRecorder.Microphone> get() = (recorder as? SweepRecorder)?.microphones.orEmpty()
     fun selectMicrophone(id: Int) { if (current.value == Step.Checklist) (recorder as? SweepRecorder)?.selectMicrophone(id) }
     fun setTarget(target: RigTarget) { if (current.value == Step.Checklist) rigTarget = target }
+    /** Speakers only: a headphone rig target was measured through its own microphone already. */
+    fun setMicCalibration(calibration: MicCalibration?) {
+        if (current.value == Step.Checklist && output == CalibrationOutput.SPEAKER) micCalibration = calibration
+    }
     fun beginHeadphone(fixtureConfirmed: Boolean, fixtureDescription: String = "Headphone fixture/coupler") {
         require(fixtureDescription.isNotBlank() && fixtureDescription.length <= 100 && fixtureDescription.none { it.isISOControl() }) { "Name the fixture or coupler (up to 100 characters)." }
         fixtureName = fixtureDescription.trim()
@@ -117,7 +123,7 @@ class CalibrationWizard internal constructor(
                     if (stereo == null) recorder.capture(sweep.toPcm16()) { !isActive } else recorder.capture(stereo.pcm(), 2) { !isActive }
                 } ?: return@withContext Take.Rejected(Take.Reason.CAPTURE, MIC_FAILED)
                 capture.problem?.let { Take.Rejected(Take.Reason.CAPTURE, it) }
-                    ?: stereo?.analyze(analyzer, capture.recording) ?: analyzer.analyze(capture.recording)
+                    ?: stereo?.analyze(analyzer, capture.recording, micDb) ?: analyzer.analyze(capture.recording, micDb)
             }
             when (take) {
                 is Take.Rejected -> {
@@ -217,7 +223,7 @@ class CalibrationWizard internal constructor(
                 measuredDb = fit.measuredDb.toList(),
                 targetDb = fit.targetDb.toList(),
                 predictedDb = fit.predictedDb.toList(),
-                micSource = recorder.micSource,
+                micSource = recorder.micSource + (micCalibration?.let { "; calibration: ${it.source}" } ?: ""),
                 approximate = !recorder.unprocessed,
                 excludedBandsHz = fit.excludedBandsHz,
                 targetId = (result.target ?: SpeakerTarget.CAR).id,
@@ -284,7 +290,7 @@ class CalibrationWizard internal constructor(
                         frame[0]
                     }
                     val capture = recorder.capture(sweep.toPcm16(corrected)) { !isActive }
-                    val take = if (capture.problem == null) analyzer.analyze(capture.recording) else null
+                    val take = if (capture.problem == null) analyzer.analyze(capture.recording, micDb) else null
                     (take as? Take.Accepted)?.let { PeqFitter.verify(fit, original, it) }
                 }
             }
@@ -300,7 +306,7 @@ class CalibrationWizard internal constructor(
         val chain = DspChain.of(stereo.correction.settings(fit.bands), sweep.sampleRate, 2)
         val capture = recorder.capture(requireNotNull(stereoSweep).pcm { chain.process(it) }, 2, cancelled)
         if (capture.problem != null) return null
-        val corrected = (requireNotNull(stereoSweep).analyze(analyzer, capture.recording) as? Take.Accepted)?.sides ?: return null
+        val corrected = (requireNotNull(stereoSweep).analyze(analyzer, capture.recording, micDb) as? Take.Accepted)?.sides ?: return null
         val gapMs = (corrected.right.arrivalSeconds - corrected.left.arrivalSeconds) * 1_000
         Log.i(TAG, "check: right side arrives %.2f ms after the left".format(gapMs))
         return stereo.verify(original, corrected)

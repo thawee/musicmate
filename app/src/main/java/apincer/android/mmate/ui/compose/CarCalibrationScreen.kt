@@ -89,6 +89,10 @@ fun CarCalibrationScreen(
     output: CalibrationOutput = CalibrationOutput.SPEAKER,
     microphones: List<SweepRecorder.Microphone> = emptyList(),
     onMicrophone: (Int) -> Unit = {},
+    micCalibrationName: String? = null,
+    micCalibrationAvailable: Boolean = false,
+    onImportMicCalibration: () -> Unit = {},
+    onClearMicCalibration: () -> Unit = {},
     targetName: String? = null,
     onImportTarget: () -> Unit = {},
     onFixtureConfirmed: (Boolean) -> Unit = {},
@@ -155,6 +159,19 @@ fun CarCalibrationScreen(
                             }
                         }
                         Small("Keep the same microphone connected for every take and the check sweep.")
+                    }
+                    if (!headphone && micCalibrationAvailable) {
+                        Heading("Microphone calibration")
+                        if (micCalibrationName == null) {
+                            Small("A measurement microphone comes with a calibration file. Import it so the correction leaves the microphone's own response out. For a microphone pointing at the roof, use its 90 degree file.")
+                            TextButton(onClick = onImportMicCalibration) { Text("Import calibration file") }
+                        } else {
+                            Small("Using $micCalibrationName for this microphone.")
+                            Row {
+                                TextButton(onClick = onImportMicCalibration) { Text("Replace") }
+                                TextButton(onClick = onClearMicCalibration) { Text("Remove") }
+                            }
+                        }
                     }
                 }
                 is CalibrationWizard.Step.Position -> Position(step, headphone)

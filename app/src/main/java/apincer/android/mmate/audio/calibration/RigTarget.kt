@@ -1,7 +1,5 @@
 package apincer.android.mmate.audio.calibration
 
-import kotlin.math.ln
-
 /** A target measured on the same microphone and headphone fixture as the calibration. */
 class RigTarget private constructor(val source: String, val curve: DoubleArray) {
     companion object {
@@ -25,15 +23,7 @@ class RigTarget private constructor(val source: String, val curve: DoubleArray) 
                 points += hz to db
             }
             require(points.size >= 2 && points.first().first <= 100 && points.last().first >= 8000) { "Target must cover at least 100 Hz to 8000 Hz." }
-            var upper = 1
-            val curve = DoubleArray(FrequencyGrid.HZ.size) { index ->
-                val hz = FrequencyGrid.HZ[index].coerceIn(points.first().first, points.last().first)
-                while (upper < points.lastIndex && points[upper].first < hz) upper++
-                val (a, av) = points[upper - 1]
-                val (b, bv) = points[upper]
-                av + (bv - av) * ln(hz / a) / ln(b / a)
-            }
-            return RigTarget(source.trim(), curve)
+            return RigTarget(source.trim(), FrequencyGrid.resample(points))
         }
     }
 }

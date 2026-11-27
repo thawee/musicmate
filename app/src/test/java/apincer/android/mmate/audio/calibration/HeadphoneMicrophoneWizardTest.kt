@@ -72,6 +72,8 @@ class HeadphoneMicrophoneWizardTest {
         every { recorder.capture(any(), any(), any()) } returns SweepRecorder.Capture(recording, null)
         val wizard = CalibrationWizard(context, scope, recorder, CalibrationOutput.HEADPHONE)
         wizard.setTarget(RigTarget.parse("100,0\n8000,0", "Rig A target.csv"))
+        // The rig target was measured through this mic, so a mic file must not be subtracted again
+        wizard.setMicCalibration(MicCalibration.parse("20 0\n1000 0\n2000 10\n4000 0\n20000 0", "umik.txt"))
         wizard.beginHeadphone(true)
         repeat(5) { index ->
             await(wizard) { it is CalibrationWizard.Step.Position && !it.measuring && it.index == index }
@@ -80,6 +82,8 @@ class HeadphoneMicrophoneWizardTest {
         val result = await(wizard) { it is CalibrationWizard.Step.Result } as CalibrationWizard.Step.Result
         assertEquals(null, result.target)
         assertTrue(result.fit.targetDb.all { it == 0.0 })
+        val at = { hz: Double -> FrequencyGrid.HZ.indices.minBy { kotlin.math.abs(FrequencyGrid.HZ[it] - hz) } }
+        assertEquals(result.fit.measuredDb[at(1_000.0)], result.fit.measuredDb[at(2_000.0)], 1.0)
         wizard.save("My rig")
         await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
         wizard.check()

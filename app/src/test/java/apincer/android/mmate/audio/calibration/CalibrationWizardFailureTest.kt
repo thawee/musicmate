@@ -58,6 +58,8 @@ class CalibrationWizardFailureTest {
     fun tearDown() {
         scope.cancel()
         unmockkAll()
+        // The recorder mock keeps every call's PCM and recording, megabytes each, until cleared
+        io.mockk.clearAllMocks()
     }
 
     @Test
@@ -226,6 +228,40 @@ class CalibrationWizardFailureTest {
         // The sweep fades in, so its quietest first samples round to zero once the left is turned down
         assertEquals(48.0, (start(check, 0) - start(plain, 0)).toDouble(), 6.0)
         assertEquals(-3.0, (rmsDb(check, 0) - rmsDb(check, 1)) - (rmsDb(plain, 0) - rmsDb(plain, 1)), 0.3)
+    }
+
+    @Test
+    fun theMicrophonesOwnResponseIsLeftOutOfTheFit() {
+        every { recorder.capture(any(), any(), any()) } answers { room(firstArg(), secondArg()) }
+        val plain = wizard(temporary.root).also { measureAllSpots(it) }.step.value as CalibrationWizard.Step.Result
+        val bump = PeqFitter.response(listOf(apincer.android.mmate.audio.dsp.PeqBand(apincer.android.mmate.audio.dsp.PeqBand.Type.PEAK, 2_000.0, 4.0, 2.0)))
+        val wizard = wizard(temporary.root)
+        wizard.setMicCalibration(MicCalibration.parse(FrequencyGrid.HZ.indices.joinToString("\n") { "${FrequencyGrid.HZ[it]} ${bump[it]}" }, "umik.txt"))
+        measureAllSpots(wizard)
+        val calibrated = wizard.step.value as CalibrationWizard.Step.Result
+        // Each measured point drops by exactly the microphone's own level there, up to one offset
+        val drops = FrequencyGrid.HZ.indices.map { plain.fit.measuredDb[it] - calibrated.fit.measuredDb[it] - bump[it] }
+        assertTrue("drop spread ${drops.max() - drops.min()} dB", drops.max() - drops.min() < 1e-6)
+        wizard.save("Car")
+        await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        assertTrue(CarProfileStore(File(temporary.root, "car_profiles")).list().first { it.micSource.contains("umik") }.micSource
+            .endsWith("; calibration: umik.txt"))
+        wizard.check()
+        assertEquals(true, (await(wizard) { it is CalibrationWizard.Step.Done } as CalibrationWizard.Step.Done).profile.verified)
+    }
+
+    @Test
+    fun aOneSidedCheckAlsoLeavesTheMicrophoneOut() {
+        every { recorder.capture(any(), any(), any()) } answers { room(firstArg(), secondArg(), rightDb = null) }
+        val wizard = wizard(temporary.root)
+        wizard.setMicCalibration(MicCalibration.parse("20 0\n1000 0\n2000 6\n4000 0\n20000 0", "umik.txt"))
+        measureAllSpots(wizard)
+        assertEquals(null, (wizard.step.value as CalibrationWizard.Step.Result).stereo)
+        wizard.save("Car")
+        await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        wizard.check()
+        assertEquals(true, (await(wizard) { it is CalibrationWizard.Step.Done } as CalibrationWizard.Step.Done).profile.verified)
+        io.mockk.verify(exactly = 1) { recorder.capture(any(), 1, any()) }
     }
 
     @Test

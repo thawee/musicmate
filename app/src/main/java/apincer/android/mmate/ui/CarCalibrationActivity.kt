@@ -20,6 +20,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import apincer.android.mmate.audio.calibration.CalibrationWizard
 import apincer.android.mmate.audio.calibration.CalibrationOutput
+import apincer.android.mmate.audio.calibration.MicCalibration
+import apincer.android.mmate.audio.calibration.MicCalibrationStore
 import apincer.android.mmate.audio.calibration.RigTarget
 import apincer.android.mmate.ui.compose.CarCalibrationScreen
 import apincer.android.mmate.ui.compose.MusicMateTheme
@@ -71,6 +73,31 @@ class CarCalibrationActivity : ComponentActivity() {
                         }
                     }
                 }
+                val micCalibrations = remember { MicCalibrationStore(this@CarCalibrationActivity) }
+                // Keyed by the device that will record: the first built-in mic until another is chosen, as capture does
+                var micName by remember { mutableStateOf(wizard.microphones.firstOrNull { it.builtIn }?.name) }
+                var micCalibrationName by remember { mutableStateOf(micName?.let(micCalibrations::get)?.also(wizard::setMicCalibration)?.source) }
+                fun useMicCalibration(calibration: MicCalibration?) {
+                    wizard.setMicCalibration(calibration)
+                    micCalibrationName = calibration?.source
+                }
+                val micCalibrationPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                    if (uri != null) scope.launch {
+                        try {
+                            val calibration = withContext(Dispatchers.IO) {
+                                val label = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                                } ?: "Microphone calibration"
+                                val bytes = requireNotNull(contentResolver.openInputStream(uri)).use { it.readNBytes(MicCalibration.MAX_BYTES + 1) }
+                                MicCalibration.parse(bytes.toString(Charsets.UTF_8), label)
+                            }
+                            micCalibrations.put(requireNotNull(micName) { "Choose a microphone first." }, calibration)
+                            useMicCalibration(calibration)
+                        } catch (error: Exception) {
+                            Toast.makeText(this@CarCalibrationActivity, error.message ?: "Could not read the calibration file", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
                 fun leave() {
                     if (wizard.hasUnsavedWork) confirmingExit = true else finish()
                 }
@@ -109,7 +136,18 @@ class CarCalibrationActivity : ComponentActivity() {
                     onClose = { leave() },
                     output = output,
                     microphones = wizard.microphones,
-                    onMicrophone = wizard::selectMicrophone,
+                    onMicrophone = { id ->
+                        wizard.selectMicrophone(id)
+                        micName = wizard.microphones.firstOrNull { it.id == id }?.name
+                        useMicCalibration(micName?.let(micCalibrations::get))
+                    },
+                    micCalibrationName = micCalibrationName,
+                    micCalibrationAvailable = micName != null,
+                    onImportMicCalibration = { micCalibrationPicker.launch(arrayOf("text/*", "application/octet-stream")) },
+                    onClearMicCalibration = {
+                        micName?.let { micCalibrations.put(it, null) }
+                        useMicCalibration(null)
+                    },
                     targetName = targetName,
                     onImportTarget = { targetPicker.launch(arrayOf("text/*", "application/octet-stream", "application/vnd.ms-excel")) },
                     onFixtureConfirmed = { fixtureConfirmed = it },

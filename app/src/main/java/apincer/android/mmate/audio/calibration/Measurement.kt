@@ -17,6 +17,21 @@ import kotlin.math.sqrt
 object FrequencyGrid {
     @JvmField
     val HZ: DoubleArray = generateSequence(20.0) { it * 2.0.pow(1.0 / 48) }.takeWhile { it <= 20_000.0 }.toList().toDoubleArray()
+
+    /**
+     * [points] (Hz, dB), with strictly rising frequencies, on [HZ]: straight lines on a log
+     * frequency axis, held flat beyond the first and last point.
+     */
+    fun resample(points: List<Pair<Double, Double>>): DoubleArray {
+        var upper = 1
+        return DoubleArray(HZ.size) { index ->
+            val hz = HZ[index].coerceIn(points.first().first, points.last().first)
+            while (upper < points.lastIndex && points[upper].first < hz) upper++
+            val (a, av) = points[upper - 1]
+            val (b, bv) = points[upper]
+            av + (bv - av) * ln(hz / a) / ln(b / a)
+        }
+    }
 }
 
 /**
@@ -138,7 +153,8 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
     private val spectrumFft = Fft(SPECTRUM_SIZE)
     private val ambientFft = Fft(AMBIENT_FFT_SIZE)
 
-    fun analyze(recording: DoubleArray): Take {
+    /** [micDb] is the microphone's own response on [FrequencyGrid.HZ], taken out of the result. */
+    fun analyze(recording: DoubleArray, micDb: DoubleArray? = null): Take {
         val loudest = recording.maxOfOrNull { abs(it) } ?: 0.0
         if (loudest >= CLIP) return Take.Rejected(Take.Reason.CLIPPED, "Recording reached %.2f of full scale".format(loudest))
 
@@ -195,7 +211,8 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
             val worst = noisy.minBy { bandSnr[it] }
             return Take.Rejected(Take.Reason.TOO_QUIET, "Only %.0f dB above the noise near %.0f Hz".format(bandSnr[worst], SNR_BANDS_HZ[worst]))
         }
-        return Take.Accepted(smoothedDb(irPower, rate), bandSnr, delay, (onset - (sweep.length - 1)).toDouble() / rate)
+        val responseDb = smoothedDb(irPower, rate).also { db -> micDb?.let { mic -> db.indices.forEach { db[it] -= mic[it] } } }
+        return Take.Accepted(responseDb, bandSnr, delay, (onset - (sweep.length - 1)).toDouble() / rate)
     }
 
     private fun ambientPower(signal: DoubleArray, start: Int, length: Int): DoubleArray {

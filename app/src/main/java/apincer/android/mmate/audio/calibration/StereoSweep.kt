@@ -35,10 +35,10 @@ class StereoSweep(private val sweep: LogSweep) {
      * Accepts the spot only when both sides are usable, so a retry measures both again. A side
      * that makes no sound at all leaves the other side's take, without [Take.Accepted.sides].
      */
-    fun analyze(analyzer: TakeAnalyzer, recording: DoubleArray): Take {
+    fun analyze(analyzer: TakeAnalyzer, recording: DoubleArray, micDb: DoubleArray? = null): Take {
         if (recording.size < 2 * half) return Take.Rejected(Take.Reason.TOO_SHORT, "The recording stopped early")
-        val left = analyzer.analyze(recording.copyOfRange(0, half))
-        val right = analyzer.analyze(recording.copyOfRange(half, 2 * half))
+        val left = analyzer.analyze(recording.copyOfRange(0, half), micDb)
+        val right = analyzer.analyze(recording.copyOfRange(half, 2 * half), micDb)
         fun silent(take: Take) = take is Take.Rejected && take.reason == Take.Reason.NO_RESPONSE
         return when {
             left is Take.Accepted && right is Take.Accepted -> Take.Accepted(

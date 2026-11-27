@@ -37,13 +37,14 @@ interface SweepCapture {
  */
 class SweepRecorder(context: Context) : SweepCapture {
     private val audioManager = context.getSystemService(AudioManager::class.java)
-    data class Microphone(val id: Int, val name: String)
+    /** [builtIn] for the phone's own mic, which records when none is chosen. */
+    data class Microphone(val id: Int, val name: String, val builtIn: Boolean = false)
     private var requestedMicId: Int? = null
     private var capturedRoute: Pair<Int, Int>? = null
     val microphones: List<Microphone> get() = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
         .filter { it.type in setOf(AudioDeviceInfo.TYPE_BUILTIN_MIC, AudioDeviceInfo.TYPE_USB_DEVICE,
             AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_WIRED_HEADSET) }
-        .map { Microphone(it.id, "${it.productName} (${AudioOutputHelper.typeToString(it.type)})") }
+        .map { Microphone(it.id, "${it.productName} (${AudioOutputHelper.typeToString(it.type)})", it.type == AudioDeviceInfo.TYPE_BUILTIN_MIC) }
 
     fun selectMicrophone(id: Int) { requestedMicId = id }
     fun beginSession() { capturedRoute = null }

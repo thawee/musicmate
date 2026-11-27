@@ -1725,7 +1725,12 @@ The user chose to build all five open items, in this order, each in its own comm
     The gapless probe ran with 5a; 5b to 5d leave the DSP unchanged. A mutation that plays the plain sweep in the check fails the wizard test, so the corrected stream is proven to play.
     From review: a clipped or noisy side is reported ahead of a silent one, the stream ends with 6 ms of padding so a delayed side's fade-out finishes, and room noise on a dead side still counts as silent.
     Not proven on a device: the check confirms each side's EQ only, because alignment removes the level offset and the arrival gap is logged, not checked.
-- [ ] 4. Mic calibration files, moved last: import a frequency and dB file and subtract it before fitting. Recording from a chosen USB mic already exists (SweepRecorder.selectMicrophone). The user has no USB measurement mic yet (2026-11-27), so build the parser from the documented file formats and test it on the real file later.
+- [x] 4. Mic calibration files, moved last: import a frequency and dB file and subtract it before fitting. Recording from a chosen USB mic already exists (SweepRecorder.selectMicrophone). The user has no USB measurement mic yet (2026-11-27), so build the parser from the documented file formats and test it on the real file later.
+  - [x] 4a. Parser: `MicCalibration.parse(text, source)` reads frequency and dB columns from the documented formats (REW, miniDSP UMIK, Dayton), ignores phase and header lines, and resamples onto FrequencyGrid with the interpolation RigTarget already uses, moved to FrequencyGrid.
+  - [x] 4b. Apply: `TakeAnalyzer.analyze(recording, micDb)` subtracts the mic curve from every take, so every spot, both sides and the check sweep see the same correction and the check's before/after difference stays exact. Speaker output only, since a headphone rig target already includes its mic.
+  - [x] 4c. Screen and storage: an "Import mic calibration" button under the mic picker, the file name shown, the profile's micSource naming the file, and the last file remembered for the mic it was loaded for.
+  - [x] 4d. Tests on synthetic files of each format, a wizard run showing the fit no longer corrects the mic's own bump, reviewer, commit.
+    From review: a file is stored under the mic that will record (the first built-in mic until another is chosen), never a placeholder name, and a line without a period reads commas as decimal points. Mutations that drop the curve from the one-sided check or let headphone mode take a file both fail their tests. Not seen on a device: the activity wiring (default key, Replace, Remove).
 - [ ] (waiting on user: get a USB measurement mic and its calibration file) Import the file and run one tuning with that mic.
-- [ ] Each feature has tests, unit suites pass, and the advisor reviews the diff.
-- [ ] Commit each feature; push only when the user asks.
+- [x] Each feature has tests, unit suites pass, and the advisor reviews the diff.
+- [x] Commit each feature; push only when the user asks.
