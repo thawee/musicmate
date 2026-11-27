@@ -12,7 +12,7 @@ import apincer.android.mmate.ui.compose.SettingsScreen
 import apincer.android.mmate.worker.LoudnessWorker
 import apincer.music.core.Constants
 import apincer.music.core.Settings
-import apincer.android.mmate.service.PowerampSongMonitor
+import apincer.android.mmate.service.PlayerSongMonitor
 
 class SettingsActivity : ComponentActivity() {
 
@@ -24,8 +24,8 @@ class SettingsActivity : ComponentActivity() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         setContent {
-            var powerampSongDetection by remember {
-                mutableStateOf(prefs.getBoolean(PowerampSongMonitor.PREF_ENABLED, false))
+            var playerSongDetection by remember {
+                mutableStateOf(prefs.getBoolean(PlayerSongMonitor.PREF_ENABLED, false))
             }
             var prefixTrackNumber by remember {
                 mutableStateOf(Settings.isShowTrackNumber(this@SettingsActivity))
@@ -66,10 +66,10 @@ class SettingsActivity : ComponentActivity() {
 
             MusicMateTheme {
                 SettingsScreen(
-                    powerampSongDetection = powerampSongDetection,
-                    onPowerampSongDetectionChange = { enabled ->
-                        powerampSongDetection = enabled
-                        prefs.edit().putBoolean(PowerampSongMonitor.PREF_ENABLED, enabled).apply()
+                    playerSongDetection = playerSongDetection,
+                    onPlayerSongDetectionChange = { enabled ->
+                        playerSongDetection = enabled
+                        prefs.edit().putBoolean(PlayerSongMonitor.PREF_ENABLED, enabled).apply()
                     },
                     prefixTrackNumber = prefixTrackNumber,
                     onPrefixTrackNumberChange = { checked ->

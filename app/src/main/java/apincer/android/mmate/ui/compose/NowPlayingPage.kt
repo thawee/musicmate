@@ -98,7 +98,7 @@ import coil3.compose.AsyncImage
 typealias TelemetryWidgetMode = StudioVisualizerMode
 
 @Composable
-internal fun PowerampSongCard(song: apincer.android.mmate.service.PowerampSong) {
+internal fun PlayerSongCard(song: apincer.android.mmate.service.PlayerSong) {
     Column(
         Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
@@ -108,9 +108,9 @@ internal fun PowerampSongCard(song: apincer.android.mmate.service.PowerampSong) 
     ) {
         Text(
             when (song.isPlaying) {
-                true -> "Poweramp · Playing"
-                false -> "Poweramp · Paused"
-                null -> "Reported by Poweramp"
+                true -> "${song.player} · Playing"
+                false -> "${song.player} · Paused"
+                null -> "Reported by ${song.player}"
             },
             color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp
         )
@@ -278,7 +278,7 @@ fun NowPlayingPage(
             val artworkHeight = (maxHeight - audioControlsHeight)
                 .coerceAtLeast(200.dp * audioControlsDensity.fontScale)
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                state.powerampSong.value?.let { PowerampSongCard(it) }
+                state.playerSong.value?.let { PlayerSongCard(it) }
         // ── 1. EDGE-TO-EDGE FLIP CONTAINER (Art + Metadata) ─────────────────────
         Box(
             modifier = Modifier

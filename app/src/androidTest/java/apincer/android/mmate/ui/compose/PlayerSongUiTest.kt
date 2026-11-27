@@ -10,14 +10,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.preference.PreferenceManager
-import apincer.android.mmate.service.PowerampSong
-import apincer.android.mmate.service.PowerampSongMonitor
+import apincer.android.mmate.service.PlayerSong
+import apincer.android.mmate.service.PlayerSongMonitor
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Rule
 import org.junit.Test
 
-class PowerampSongUiTest {
+class PlayerSongUiTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -25,37 +25,37 @@ class PowerampSongUiTest {
     fun realBroadcastReachesCardWithoutReplacingLocalTrack() {
         val context = composeRule.activity
         val preferences = PreferenceManager.getDefaultSharedPreferences(context)
-        val wasEnabled = preferences.getBoolean(PowerampSongMonitor.PREF_ENABLED, false)
-        val monitor = PowerampSongMonitor(context)
+        val wasEnabled = preferences.getBoolean(PlayerSongMonitor.PREF_ENABLED, false)
+        val monitor = PlayerSongMonitor(context)
         val state = NowPlayingState()
         val localPlayback = state.playbackState.value
         try {
             composeRule.runOnIdle {
-                preferences.edit().putBoolean(PowerampSongMonitor.PREF_ENABLED, true).commit()
-                monitor.song.observe(context) { state.powerampSong.value = it }
+                preferences.edit().putBoolean(PlayerSongMonitor.PREF_ENABLED, true).commit()
+                monitor.song.observe(context) { state.playerSong.value = it }
                 monitor.start()
             }
             composeRule.setContent {
-                MusicMateTheme { state.powerampSong.value?.let { PowerampSongCard(it) } }
+                MusicMateTheme { state.playerSong.value?.let { PlayerSongCard(it) } }
             }
             context.sendBroadcast(Intent("com.maxmpz.audioplayer.TRACK_CHANGED")
                 .setPackage(context.packageName).putExtra("title", "Broadcast song"))
             context.sendBroadcast(Intent("com.maxmpz.audioplayer.STATUS_CHANGED")
                 .setPackage(context.packageName).putExtra("state", 1))
-            composeRule.waitUntil(5000) { state.powerampSong.value?.isPlaying == true }
+            composeRule.waitUntil(5000) { state.playerSong.value?.isPlaying == true }
             composeRule.onNodeWithText("Broadcast song").assertExists()
             composeRule.onNodeWithText("Poweramp · Playing").assertExists()
             composeRule.runOnIdle {
                 assertNull(state.track.value)
                 assertSame(localPlayback, state.playbackState.value)
-                preferences.edit().putBoolean(PowerampSongMonitor.PREF_ENABLED, false).commit()
-                assertNull(state.powerampSong.value)
+                preferences.edit().putBoolean(PlayerSongMonitor.PREF_ENABLED, false).commit()
+                assertNull(state.playerSong.value)
             }
             composeRule.onNodeWithText("Broadcast song").assertDoesNotExist()
         } finally {
             composeRule.runOnIdle {
                 monitor.stop()
-                preferences.edit().putBoolean(PowerampSongMonitor.PREF_ENABLED, wasEnabled).commit()
+                preferences.edit().putBoolean(PlayerSongMonitor.PREF_ENABLED, wasEnabled).commit()
             }
         }
     }
@@ -69,20 +69,20 @@ class PowerampSongUiTest {
                     prefixTrackNumber = false, onPrefixTrackNumberChange = {},
                     listFollowsNowPlaying = true, onListFollowsNowPlayingChange = {},
                     artistAwareSimilarSongs = true, onArtistAwareSimilarSongsChange = {},
-                    powerampSongDetection = enabled.value,
-                    onPowerampSongDetectionChange = { enabled.value = it },
+                    playerSongDetection = enabled.value,
+                    onPlayerSongDetectionChange = { enabled.value = it },
                     onBackClick = {}
                 )
             }
         }
-        composeRule.onNodeWithText("Show Poweramp song").performScrollTo().assertIsOff().performClick()
-        composeRule.onNodeWithText("Show Poweramp song").assertIsOn().performClick().assertIsOff()
+        composeRule.onNodeWithText("Show song from other players").performScrollTo().assertIsOff().performClick()
+        composeRule.onNodeWithText("Show song from other players").assertIsOn().performClick().assertIsOff()
     }
 
     @Test
     fun externalSongIdentifiesSourceAndLimitsOfControls() {
-        val song = mutableStateOf(PowerampSong("Take On Me", "a-ha", "Hunting High and Low", null))
-        composeRule.setContent { MusicMateTheme { PowerampSongCard(song.value) } }
+        val song = mutableStateOf(PlayerSong("Poweramp", "Take On Me", "a-ha", "Hunting High and Low", null))
+        composeRule.setContent { MusicMateTheme { PlayerSongCard(song.value) } }
         composeRule.onNodeWithText("Reported by Poweramp").assertExists()
         composeRule.onNodeWithText("Take On Me").assertExists()
         composeRule.onNodeWithText("a-ha · Hunting High and Low").assertExists()
@@ -91,5 +91,7 @@ class PowerampSongUiTest {
         composeRule.onNodeWithText("Poweramp · Playing").assertExists()
         composeRule.runOnIdle { song.value = song.value.copy(isPlaying = false) }
         composeRule.onNodeWithText("Poweramp · Paused").assertExists()
+        composeRule.runOnIdle { song.value = song.value.copy(player = "Neutron", isPlaying = true) }
+        composeRule.onNodeWithText("Neutron · Playing").assertExists()
     }
 }

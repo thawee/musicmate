@@ -97,7 +97,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity implements apincer.android.mmate.ui.compose.MainScaffoldCallbacks {
     private static final String TAG = "MainActivity";
-    private apincer.android.mmate.service.PowerampSongMonitor powerampSongMonitor;
+    private apincer.android.mmate.service.PlayerSongMonitor playerSongMonitor;
     /** Boolean extra: open Music Center on Now Playing, e.g. from a song's details. */
     public static final String EXTRA_OPEN_NOW_PLAYING = "apincer.android.mmate.OPEN_NOW_PLAYING";
 
@@ -458,9 +458,9 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
         // Setup night mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
-        powerampSongMonitor = new apincer.android.mmate.service.PowerampSongMonitor(this);
-        powerampSongMonitor.getSong().observe(this, song ->
-                MainScaffoldState.get().getNowPlayingState().getPowerampSong().setValue(song));
+        playerSongMonitor = new apincer.android.mmate.service.PlayerSongMonitor(this);
+        playerSongMonitor.getSong().observe(this, song ->
+                MainScaffoldState.get().getNowPlayingState().getPlayerSong().setValue(song));
         if (savedInstanceState == null) openNowPlayingIfAsked(getIntent());
         if (savedInstanceState != null) {
             reopenFoldersAfterStorageGrant = savedInstanceState.getBoolean(STATE_REOPEN_FOLDERS);
@@ -780,13 +780,13 @@ public class MainActivity extends AppCompatActivity implements apincer.android.m
     @Override
     protected void onStart() {
         super.onStart();
-        powerampSongMonitor.start();
+        playerSongMonitor.start();
     }
 
     @Override
     protected void onStop() {
-        powerampSongMonitor.stop();
-        MainScaffoldState.get().getNowPlayingState().getPowerampSong().setValue(null);
+        playerSongMonitor.stop();
+        MainScaffoldState.get().getNowPlayingState().getPlayerSong().setValue(null);
         super.onStop();
     }
 

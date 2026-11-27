@@ -1682,3 +1682,16 @@ Cause: the deleted notification listener was bound by Android, which kept MusicM
   Done on Medium_Phone (API 36): after killing the paused app, `cmd media_session dispatch play` restarted it and played Adagio Cantabile; next moved to Afterglow through the queue, pause worked, and Now Playing showed Afterglow. 449 unit tests pass.
 - [ ] (waiting on user: install on the phone and test Bluetooth and Android Auto play/pause/next after the app sits idle)
 
+## Show songs from Neutron, UAPP and HiBy (2026-11-27)
+
+Generalise the Poweramp monitor into a display-only listener for other players, using the actions from the old `MusicBroadcastReceiver` (removed 2024-09, commit 594b3834d). Research found current broadcast evidence only for Neutron; UAPP and HiBy are unverified, so the phone test decides.
+
+- [x] how: skip, the monitor, its wiring and the card were read this session.
+- [x] architect: skip, single module, and the design is fixed by the old receiver plus the Poweramp shape.
+- [x] Checkpoint. Blocking first steps: none. Independent workstreams: n/a, one monitor file plus its callers. Shared mutable state: n/a, one writer. Smallest safe decomposition: one worker, because the change is coupled.
+- [x] Worker renames `PowerampSongMonitor` to `PlayerSongMonitor`, adds a source table (Poweramp, standard Android, UAPP, HiBy), and labels the card with the player name. The pref key stays the same.
+- [x] Verify: unit and instrumented tests pass, and simulated broadcasts on the emulator show the card for each player.
+  Done: 13/13 monitor and 3/3 UI instrumented tests, 449 unit tests, and simulated Neutron, UAPP and HiBy broadcasts showed the right card on the emulator. `playbackcomplete` now clears that player's card.
+- [ ] Commit and PR: skip until the user asks (CLAUDE.md).
+- [ ] (waiting on user: on the phone, play in Neutron, UAPP and HiBy, and run `adb shell dumpsys activity broadcasts history | grep -iE 'metachanged|playstatechanged|hiby'`)
+
