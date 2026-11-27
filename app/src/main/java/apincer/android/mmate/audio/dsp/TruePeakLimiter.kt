@@ -6,6 +6,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.log10
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sin
@@ -33,6 +34,8 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
     private val maximumValues = DoubleArray(capacity)
     private val attack = 1.0 - exp(-1.0 / (sampleRate * 0.001))
     private val release = 1.0 - exp(-1.0 / (sampleRate * 0.050))
+    private val mixIn = 1.0 / (sampleRate * 0.005)
+    private val mixOut = 1.0 / (sampleRate * 0.050)
     private var historyPosition = 0
     private var maximumHead = 0
     private var maximumSize = 0
@@ -41,6 +44,7 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
     private var emittedFrames = 0L
     private var draining = false
     private var gain = 1.0
+    private var mix = 1.0
 
     /** Number of consumed original frames still awaiting output. */
     val pendingFrames: Int get() = (receivedFrames - emittedFrames).toInt()
@@ -51,7 +55,7 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
     /** Current linked limiter gain, before a queued frame's bypass flag is applied. */
     val currentGain: Double get() = gain
 
-    /** Linear gain applied to the most recently emitted frame, including its bypass flag. */
+    /** Linear gain applied to the most recently emitted frame, including its bypass ramp. */
     var lastOutputGain: Double = 1.0
         private set
 
@@ -64,7 +68,8 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
 
     /**
      * Consumes one [channels]-sample frame; returns whether [output] was written. [enabled]
-     * travels with the input frame: disabled frames retain the delay but are emitted at unity.
+     * travels with the input frame: disabled frames retain the delay and ramp to unity over 50 ms,
+     * enabled frames ramp back over 5 ms.
      */
     fun process(input: DoubleArray, output: DoubleArray, enabled: Boolean = true): Boolean {
         require(input.size >= channels && output.size >= channels)
@@ -103,6 +108,7 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
         emittedFrames = 0
         draining = false
         gain = 1.0
+        mix = 1.0
         lastOutputGain = 1.0
     }
 
@@ -160,7 +166,9 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
         }
         gain = min(gain, requiredGain(nearbyPeak))
         val slot = (emittedFrames % capacity).toInt() * channels
-        val outputGain = if (enabledFrames[(emittedFrames % capacity).toInt()]) gain else 1.0
+        mix = if (enabledFrames[(emittedFrames % capacity).toInt()]) min(1.0, mix + mixIn) else max(0.0, mix - mixOut)
+        // Exact at both ends: unity once bypassed, the limiter gain once engaged
+        val outputGain = gain * mix + (1.0 - mix)
         lastOutputGain = outputGain
         for (channel in 0 until channels) output[channel] = frames[slot + channel] * outputGain
         emittedFrames++
@@ -168,10 +176,10 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
 
     private fun requiredGain(peak: Double): Double = if (peak > DETECTOR_CEILING) DETECTOR_CEILING / peak else 1.0
 
-    private companion object {
-        const val TAPS = 96
-        val DETECTOR_CEILING = 10.0.pow(-2.2 / 20.0)
-        val SUPPLEMENTARY_PHASES = Array(3) { phase ->
+    internal companion object {
+        private const val TAPS = 96
+        internal val DETECTOR_CEILING = 10.0.pow(-2.2 / 20.0)
+        private val SUPPLEMENTARY_PHASES = Array(3) { phase ->
             DoubleArray(TAPS) { tap ->
                 val distance = tap - (TAPS / 2 - 1) - (phase + 1) / 4.0
                 val sinc = if (abs(distance) < 1e-12) 1.0 else sin(PI * distance) / (PI * distance)
@@ -180,7 +188,7 @@ class TruePeakLimiter(sampleRate: Int, private val channels: Int) {
                 sinc * window
             }
         }
-        val PHASES = arrayOf(
+        private val PHASES = arrayOf(
             doubleArrayOf(0.001708984375, 0.010986328125, -0.0196533203125, 0.033203125,
                 -0.0594482421875, 0.1373291015625, 0.97216796875, -0.102294921875,
                 0.047607421875, -0.026611328125, 0.014892578125, -0.00830078125),

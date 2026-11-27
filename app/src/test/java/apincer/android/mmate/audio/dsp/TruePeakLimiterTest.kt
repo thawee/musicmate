@@ -1,5 +1,6 @@
 package apincer.android.mmate.audio.dsp
 
+import apincer.music.core.playback.ReplayGainManager
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -90,25 +91,45 @@ class TruePeakLimiterTest {
     }
 
     @Test
-    fun queuedBypassFlagsApplyToTheirOriginalFrames() {
-        val limiter = TruePeakLimiter(48_000, 1)
+    fun replayGainClippingGuardStopsAtTheLimiterThreshold() {
+        assertEquals(TruePeakLimiter.DETECTOR_CEILING, ReplayGainManager.LIMITER_THRESHOLD, 0.0)
+    }
+
+    @Test
+    fun bypassFlagsRampTheGainWithTheirFramesAndEndBitExact() {
+        val rate = 48_000
+        val limiter = TruePeakLimiter(rate, 1)
         val frame = doubleArrayOf(2.0)
         val output = DoubleArray(1)
-        var emitted = 0
-        repeat(1000) { index ->
-            val enabled = index % 3 != 0
-            if (limiter.process(frame, output, enabled)) {
-                if (emitted % 3 == 0) assertEquals(2.0, output[0], 0.0)
-                else assertTrue(output[0] < CEILING)
-                emitted++
-            }
+        // A steady over until the detector settles, then off, on and off again; each flag travels with its frame
+        val settle = rate
+        val off = settle + 6000
+        val on = off + 2400
+        val flags = List(on + 6000) { it < settle || it in off until on }
+        val gains = mutableListOf<Double>()
+        val outputs = mutableListOf<Double>()
+        fun capture() {
+            gains += limiter.lastOutputGain
+            outputs += output[0]
         }
-        while (limiter.drain(output)) {
-            if (emitted % 3 == 0) assertEquals(2.0, output[0], 0.0)
-            else assertTrue(output[0] < CEILING)
-            emitted++
+        for (enabled in flags) if (limiter.process(frame, output, enabled)) capture()
+        while (limiter.drain(output)) capture()
+        assertEquals(flags.size, gains.size)
+        val settled = gains[settle - 1]
+        assertTrue(settled < 0.5)
+        val rampIn = (1 - settled) / (rate * 0.005) + 1e-12
+        val rampOut = (1 - settled) / (rate * 0.050) + 1e-12
+        for (index in settle until flags.size) {
+            val step = abs(gains[index] - gains[index - 1])
+            assertTrue("frame $index stepped $step", step <= if (flags[index]) rampIn else rampOut)
         }
-        assertEquals(1000, emitted)
+        assertTrue("bypass starts on the first disabled frame", gains[settle] > settled)
+        for (index in settle + 2401 until off) {
+            assertEquals(1.0, gains[index], 0.0)
+            assertEquals(2.0, outputs[index], 0.0)
+        }
+        assertEquals(settled, gains[off + 241], 1e-9)
+        for (index in on + 2401 until flags.size) assertEquals(2.0, outputs[index], 0.0)
     }
 
     @Test

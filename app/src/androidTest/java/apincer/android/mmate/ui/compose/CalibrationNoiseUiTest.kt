@@ -2,6 +2,9 @@ package apincer.android.mmate.ui.compose
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.assertIsDisplayed
@@ -97,8 +100,53 @@ class CalibrationNoiseUiTest {
                 )
             }
         }
-        composeRule.onNodeWithText("Reliable frequencies within ±3 dB").assertIsDisplayed()
+        composeRule.onNodeWithText("Reliable frequencies passed, within ±3 dB").assertIsDisplayed()
         composeRule.onNodeWithText("Partial calibration:", substring = true).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Done").assertIsDisplayed()
+    }
+
+    @Test
+    fun aCheckThatSkippedNoisyFrequenciesDoesNotClaimAllPassed() {
+        val profile = CarProfile(
+            id = "test", name = "Car", createdAtMillis = 1, bands = emptyList(), fromHz = 30.0,
+            measuredDb = emptyList(), targetDb = emptyList(), predictedDb = emptyList(),
+            micSource = "UNPROCESSED", approximate = false, verified = true, worstDeviationDb = 1.0
+        )
+        composeRule.setContent {
+            MusicMateTheme {
+                CarCalibrationScreen(
+                    step = CalibrationWizard.Step.Done(profile, partialCheck = true), unprocessedMic = true,
+                    onStart = {}, onMeasure = {}, onSave = {}, onClose = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("Reliable frequencies passed, within ±3 dB").assertIsDisplayed()
+    }
+
+    @Test
+    fun theCheckSweepWaitsForStartAndCanBeSkipped() {
+        val fit = PeqFitter.fit(CarTarget.CURVE)
+        val profile = CarProfile(
+            id = "test", name = "Car", createdAtMillis = 1, bands = emptyList(), fromHz = 30.0,
+            measuredDb = emptyList(), targetDb = emptyList(), predictedDb = emptyList(),
+            micSource = "UNPROCESSED", approximate = false
+        )
+        var step by mutableStateOf<CalibrationWizard.Step>(CalibrationWizard.Step.Verifying(profile, fit))
+        var checks = 0
+        composeRule.setContent {
+            MusicMateTheme {
+                CarCalibrationScreen(
+                    step = step, unprocessedMic = true,
+                    onStart = {}, onMeasure = {}, onSave = {}, onClose = {},
+                    onCheck = { checks++ }, onSkipCheck = { step = CalibrationWizard.Step.Done(profile, checkSkipped = true) }
+                )
+            }
+        }
+        composeRule.onNodeWithText("Check the correction").assertIsDisplayed()
+        composeRule.onNodeWithText("Start check").assertIsDisplayed().performClick()
+        assertEquals(1, checks)
+        composeRule.onNodeWithText("Skip check").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("Not checked").assertIsDisplayed()
+        composeRule.onNodeWithText("The check sweep was skipped.", substring = true).assertIsDisplayed()
     }
 }

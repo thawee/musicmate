@@ -4,11 +4,11 @@ import apincer.android.mmate.audio.dsp.Biquad
 import apincer.android.mmate.audio.dsp.PeqBand
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.math.pow
 
 class PartialCalibrationFitTest {
@@ -73,30 +73,43 @@ class PartialCalibrationFitTest {
         val corrected = DoubleArray(grid.size) {
             CarTarget.CURVE[it] + 12.0 + if (PeqFitter.isExcluded(grid[it], excluded)) 40.0 else 0.0
         }
-        val passed = PeqFitter.verify(fit, corrected)
+        val passed = PeqFitter.verify(fit, CarTarget.CURVE, corrected)!!
         assertTrue("worst ${passed.worstDeviationDb} dB at ${passed.worstHz} Hz", passed.passed)
         val failing = corrected.copyOf()
         val peak = grid.indices.minBy { abs(grid[it] - 4_000.0) }
         failing[peak] += 5.0
-        assertFalse(PeqFitter.verify(fit, failing).passed)
+        assertFalse(PeqFitter.verify(fit, CarTarget.CURVE, failing)!!.passed)
     }
 
     @Test
-    fun newVerificationNoiseRequiresARetakeRatherThanChangingTheFitMask() {
+    fun noiseInEitherCheckTakeSkipsThoseFrequenciesWithoutChangingTheFitMask() {
         val excluded = listOf(1_000.0)
         val fit = PeqFitter.fit(CarTarget.CURVE, excludedBandsHz = excluded)
-        assertNotNull(PeqFitter.verify(fit, takeWithNoiseAt(1_000.0)))
-        assertNull(PeqFitter.verify(fit, takeWithNoiseAt(2_000.0)))
-        assertNotNull(PeqFitter.verify(fit, takeWithNoiseAt(40.0)))
-        assertNull(PeqFitter.verify(fit, takeWithNoiseAt(80.0)))
-        val bassLimited = PeqFitter.fit(CarTarget.CURVE, fromHz = 100.0)
-        assertNotNull(PeqFitter.verify(bassLimited, takeWithNoiseAt(80.0)))
+        val original = takeWithNoiseAt()
+        for (noisyHz in listOf(1_000.0, 2_000.0)) {
+            val check = PeqFitter.verify(fit, original, takeWithNoiseAt(noisyHz, offsetDb = 10.0))
+            assertTrue("noise at $noisyHz Hz: ${check?.worstDeviationDb} dB at ${check?.worstHz} Hz", check?.passed == true)
+            assertEquals("partial with noise at $noisyHz Hz", noisyHz !in excluded, check!!.partial)
+            assertTrue(PeqFitter.verify(fit, takeWithNoiseAt(noisyHz, offsetDb = 10.0), original)?.passed == true)
+        }
+        assertEquals(excluded, fit.excludedBandsHz)
+        val bassNoise = PeqFitter.verify(fit, original, takeWithNoiseAt(80.0, offsetDb = 10.0))!!
+        assertTrue("worst ${bassNoise.worstDeviationDb} dB at ${bassNoise.worstHz} Hz", bassNoise.passed && bassNoise.partial)
+        assertFalse(PeqFitter.verify(fit, original, takeWithNoiseAt())!!.partial)
+        val allNoisy = Take.Accepted(CarTarget.CURVE.copyOf(), DoubleArray(TakeAnalyzer.SNR_BANDS_HZ.size), 0.5)
+        assertNull(PeqFitter.verify(fit, original, allNoisy))
     }
 
-    private fun takeWithNoiseAt(frequencyHz: Double): Take.Accepted {
+    /** [offsetDb] lands only on the noisy band, the way noise reads as level. */
+    private fun takeWithNoiseAt(frequencyHz: Double? = null, offsetDb: Double = 0.0): Take.Accepted {
         val snr = DoubleArray(TakeAnalyzer.SNR_BANDS_HZ.size) { 30.0 }
-        val band = snr.indices.minBy { abs(TakeAnalyzer.SNR_BANDS_HZ[it] - frequencyHz) }
-        snr[band] = 0.0
-        return Take.Accepted(CarTarget.CURVE.copyOf(), snr, 0.5)
+        val response = CarTarget.CURVE.copyOf()
+        if (frequencyHz != null) {
+            val band = snr.indices.minBy { abs(TakeAnalyzer.SNR_BANDS_HZ[it] - frequencyHz) }
+            snr[band] = 0.0
+            val centre = TakeAnalyzer.SNR_BANDS_HZ[band]
+            for (g in grid.indices) if (abs(ln(grid[g] / centre) / ln(2.0)) <= 1.0 / 8) response[g] += offsetDb
+        }
+        return Take.Accepted(response, snr, 0.5)
     }
 }

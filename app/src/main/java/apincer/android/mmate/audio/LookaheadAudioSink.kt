@@ -38,7 +38,8 @@ class LookaheadAudioSink(
     private var conversion = emptyBuffer()
 
     override fun configure(audioSinkConfig: AudioSink.AudioSinkConfig) {
-        if (configuration != null && hasLocalData()) {
+        // Media3 configures a gapless track after its discontinuity; the next buffer decides whether DSP state carries over
+        if (configuration != null && (hasLocalData() || discontinuityPending)) {
             nextConfiguration = audioSinkConfig
         } else {
             applyConfiguration(audioSinkConfig)
@@ -47,19 +48,8 @@ class LookaheadAudioSink(
 
     private fun applyConfiguration(config: AudioSink.AudioSinkConfig) {
         val format = config.format
-        val supportedPcm = format.sampleMimeType == MimeTypes.AUDIO_RAW &&
-            format.pcmEncoding in intArrayOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_24BIT,
-                C.ENCODING_PCM_32BIT, C.ENCODING_PCM_FLOAT)
-        val outputFormat = if (supportedPcm && format.pcmEncoding in
-            intArrayOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_FLOAT)) {
-            format.buildUpon().setPcmEncoding(C.ENCODING_PCM_24BIT).build()
-        } else format
-        delegate.configure(AudioSink.AudioSinkConfig.Builder(outputFormat)
-            .setPreferredBufferSizeOverride(config.preferredBufferSizeOverride)
-            .setOutputChannelMapping(config.outputChannelMapping)
-            .setTimeline(config.timeline)
-            .setMediaPeriodId(config.mediaPeriodId)
-            .build())
+        val supportedPcm = isSupportedPcm(format)
+        configureDelegate(config)
         configuration = config
         nextConfiguration = null
         processor = if (supportedPcm) CarDspProcessor(format.sampleRate, format.channelCount,
@@ -70,9 +60,51 @@ class LookaheadAudioSink(
         clearStream()
     }
 
+    private fun configureDelegate(config: AudioSink.AudioSinkConfig) {
+        val format = config.format
+        val outputFormat = if (isSupportedPcm(format) && format.pcmEncoding in
+            intArrayOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_FLOAT)) {
+            format.buildUpon().setPcmEncoding(C.ENCODING_PCM_24BIT).build()
+        } else format
+        delegate.configure(AudioSink.AudioSinkConfig.Builder(outputFormat)
+            .setPreferredBufferSizeOverride(config.preferredBufferSizeOverride)
+            .setOutputChannelMapping(config.outputChannelMapping)
+            .setTimeline(config.timeline)
+            .setMediaPeriodId(config.mediaPeriodId)
+            .build())
+    }
+
+    /**
+     * Lossless gapless tracks of one format join sample to sample, so the filters and the limiter
+     * keep their state. Encoder delay or padding is excluded: the delegate trims at its own
+     * configuration switch, which the limiter delay would move.
+     */
+    private fun isContinuous(next: AudioSink.AudioSinkConfig): Boolean {
+        val current = configuration ?: return false
+        val old = current.format
+        val new = next.format
+        return processor != null && isSupportedPcm(new) && old.pcmEncoding == new.pcmEncoding &&
+            old.sampleRate == new.sampleRate && old.channelCount == new.channelCount &&
+            current.outputChannelMapping == next.outputChannelMapping &&
+            old.encoderDelay == 0 && old.encoderPadding == 0 && new.encoderDelay == 0 && new.encoderPadding == 0
+    }
+
+    /** Takes [next] without draining, and stamps the new track's first frame with [presentationTimeUs]. */
+    private fun continueStream(next: AudioSink.AudioSinkConfig, presentationTimeUs: Long) {
+        discontinuityPending = false
+        nextConfiguration = null
+        val held = if (delayed) checkNotNull(limiter).pendingFrames else 0
+        baseTimeUs = presentationTimeUs - (outputFrames + held) * 1_000_000L / next.format.sampleRate
+        delegate.handleDiscontinuity()
+        configureDelegate(next)
+        configuration = next
+    }
+
     override fun handleBuffer(buffer: ByteBuffer, presentationTimeUs: Long, encodedAccessUnitCount: Int): Boolean {
         revokeQueuedCorrection()
         if (!writePending()) return false
+        val next = nextConfiguration
+        if (discontinuityPending && next != null && isContinuous(next)) continueStream(next, presentationTimeUs)
         if (discontinuityPending) {
             if (!drainLocal()) return false
             clearStream()
@@ -251,6 +283,9 @@ class LookaheadAudioSink(
 
     companion object {
         private fun emptyBuffer(): ByteBuffer = ByteBuffer.allocateDirect(0)
+        private fun isSupportedPcm(format: Format) = format.sampleMimeType == MimeTypes.AUDIO_RAW &&
+            format.pcmEncoding in intArrayOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_24BIT,
+                C.ENCODING_PCM_32BIT, C.ENCODING_PCM_FLOAT)
         private fun direct(bytes: Int): ByteBuffer = ByteBuffer.allocateDirect(bytes).order(ByteOrder.LITTLE_ENDIAN)
         private fun dspPermitted() = HeadphoneDsp.current.speakerEligible || CarDsp.effectiveTarget() != null
     }

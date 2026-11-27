@@ -105,7 +105,7 @@ class CarCalibrationActivity : ComponentActivity() {
                         }
                     } },
                     onMeasure = { withMic { @Suppress("MissingPermission") wizard.measure() } },
-                    onSave = { name -> withMic { @Suppress("MissingPermission") wizard.saveAndVerify(name) } },
+                    onSave = { name -> wizard.save(name) },
                     onClose = { leave() },
                     output = output,
                     microphones = wizard.microphones,
@@ -113,7 +113,9 @@ class CarCalibrationActivity : ComponentActivity() {
                     targetName = targetName,
                     onImportTarget = { targetPicker.launch(arrayOf("text/*", "application/octet-stream", "application/vnd.ms-excel")) },
                     onFixtureConfirmed = { fixtureConfirmed = it },
-                    onFixtureName = { fixtureName = it }
+                    onFixtureName = { fixtureName = it },
+                    onCheck = { withMic { @Suppress("MissingPermission") wizard.check() } },
+                    onSkipCheck = wizard::skipCheck
                 )
                 if (confirmingExit) {
                     StopCalibrationDialog(onStop = { finish() }, onDismiss = { confirmingExit = false })

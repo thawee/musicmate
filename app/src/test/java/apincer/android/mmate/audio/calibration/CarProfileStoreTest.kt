@@ -55,6 +55,17 @@ class CarProfileStoreTest {
     }
 
     @Test
+    fun aProfileSavedBeforeTheFitRangeWasStoredWasFittedTo8kHz() {
+        val dir = folder.newFolder("car_profiles")
+        File(dir, "old.json").writeText("""{"id":"old","name":"MU-X","createdAtMillis":1,"bands":[],"fromHz":45.0,""" +
+            """"measuredDb":[],"targetDb":[],"predictedDb":[],"micSource":"UNPROCESSED","approximate":false}""")
+        val store = CarProfileStore(dir)
+        assertEquals(8_000.0, store.get("old")!!.toHz, 0.0)
+        store.save(profile("voice", 2).copy(toHz = 4_000.0))
+        assertEquals(4_000.0, store.get("voice")!!.toHz, 0.0)
+    }
+
+    @Test
     fun anUnreadableFileIsSkipped() {
         val dir = folder.newFolder("car_profiles")
         File(dir, "broken.json").writeText("{ not json")

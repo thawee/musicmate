@@ -17,6 +17,8 @@ data class CarProfile(
     val bluetoothAddress: String? = null,
     val bands: List<PeqBand>,
     val fromHz: Double,
+    /** Nothing above it was corrected or checked; profiles saved before it existed were fitted to 8 kHz. */
+    val toHz: Double = 8_000.0,
     val measuredDb: List<Double>,
     val targetDb: List<Double>,
     val predictedDb: List<Double>,

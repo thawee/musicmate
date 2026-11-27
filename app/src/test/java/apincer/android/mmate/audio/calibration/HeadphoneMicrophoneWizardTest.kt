@@ -78,7 +78,9 @@ class HeadphoneMicrophoneWizardTest {
             wizard.measure()
         }
         await(wizard) { it is CalibrationWizard.Step.Result }
-        wizard.saveAndVerify("My rig")
+        wizard.save("My rig")
+        await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        wizard.check()
         await(wizard) { it is CalibrationWizard.Step.Done }
         assertEquals(CalibrationMethod.MICROPHONE, saved.captured.method)
         assertEquals(CalibrationOutput.HEADPHONE, saved.captured.output)

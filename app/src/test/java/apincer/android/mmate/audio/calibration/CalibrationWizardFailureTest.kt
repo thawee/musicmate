@@ -21,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -85,14 +86,16 @@ class CalibrationWizardFailureTest {
         val notADirectory = temporary.newFile("files")
         val wizard = wizard(notADirectory)
         measureAllSpots(wizard)
-        wizard.saveAndVerify("Car")
+        wizard.save("Car")
         val failed = await(wizard) { it is CalibrationWizard.Step.Result && it.problem != null }
         assertTrue(failed is CalibrationWizard.Step.Result)
         assertEquals(emptyList<Throwable>(), crashes)
 
         notADirectory.delete()
         notADirectory.mkdirs()
-        wizard.saveAndVerify("Car")
+        wizard.save("Car")
+        await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        wizard.check()
         assertTrue(await(wizard) { it is CalibrationWizard.Step.Done } is CalibrationWizard.Step.Done)
     }
 
@@ -105,11 +108,61 @@ class CalibrationWizardFailureTest {
         }
         val wizard = wizard(temporary.root)
         measureAllSpots(wizard)
-        wizard.saveAndVerify("Car")
+        wizard.save("Car")
+        await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        wizard.check()
         val done = await(wizard) { it is CalibrationWizard.Step.Done } as CalibrationWizard.Step.Done
         assertEquals(null, done.profile.verified)
+        assertFalse(done.checkSkipped)
         assertEquals(listOf(done.profile.id), CarProfileStore(File(temporary.root, "car_profiles")).list().map { it.id })
         assertEquals(emptyList<Throwable>(), crashes)
+    }
+
+    @Test
+    fun theCheckSweepWaitsForTheUserAndCanBeSkipped() {
+        var calls = 0
+        every { recorder.capture(any(), any()) } answers { calls++; cleanCapture() }
+        val checked = wizard(temporary.root)
+        measureAllSpots(checked)
+        checked.save("Car")
+        await(checked) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        Thread.sleep(500)
+        assertEquals(CalibrationWizard.POSITIONS.size, calls)
+        assertTrue(checked.step.value is CalibrationWizard.Step.Verifying)
+        assertFalse(checked.hasUnsavedWork)
+        checked.check()
+        val done = await(checked) { it is CalibrationWizard.Step.Done } as CalibrationWizard.Step.Done
+        assertEquals(CalibrationWizard.POSITIONS.size + 1, calls)
+        assertEquals(true, done.profile.verified)
+        assertEquals(true, CarProfileStore(File(temporary.root, "car_profiles")).list().single().verified)
+
+        calls = 0
+        val skipped = wizard(temporary.newFolder("skipped"))
+        measureAllSpots(skipped)
+        skipped.save("Car")
+        await(skipped) { it is CalibrationWizard.Step.Verifying && !it.measuring }
+        skipped.skipCheck()
+        val notChecked = await(skipped) { it is CalibrationWizard.Step.Done } as CalibrationWizard.Step.Done
+        assertEquals(CalibrationWizard.POSITIONS.size, calls)
+        assertTrue(notChecked.checkSkipped)
+        assertEquals(null, notChecked.profile.verified)
+        assertEquals(emptyList<Throwable>(), crashes)
+    }
+
+    @Test
+    fun aVoiceMicrophoneSavesACutsOnlyCorrectionTo4kHz() {
+        every { recorder.unprocessed } returns false
+        every { recorder.capture(any(), any()) } returns cleanCapture()
+        val wizard = wizard(temporary.root)
+        measureAllSpots(wizard)
+        val result = wizard.step.value as CalibrationWizard.Step.Result
+        assertEquals(PeqFitter.VOICE_MIC_MAX_HZ, result.fit.toHz, 0.0)
+        assertTrue(result.fit.bands.all { it.gainDb <= 0.0 })
+        wizard.save("Car")
+        await(wizard) { it is CalibrationWizard.Step.Verifying }
+        val saved = CarProfileStore(File(temporary.root, "car_profiles")).list().single()
+        assertEquals(PeqFitter.VOICE_MIC_MAX_HZ, saved.toHz, 0.0)
+        assertTrue(saved.approximate)
     }
 
     private fun measureAllSpots(wizard: CalibrationWizard) {

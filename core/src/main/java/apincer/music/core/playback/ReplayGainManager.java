@@ -46,6 +46,8 @@ public class ReplayGainManager {
     static final double UNTAGGED_MASTER_LUFS = -9.0;
     /** +12 dB, so a bad peak tag cannot make a track deafening. */
     static final double MAX_BOOST = 3.981;
+    /** -2.2 dBFS, where the playback true-peak limiter starts reducing; a raised peak above it is only limited. */
+    public static final double LIMITER_THRESHOLD = Math.pow(10.0, -2.2 / 20.0);
     // Broad sanity limits: preserve quiet recordings and intersample peaks, reject corrupt tags.
     private static final double MAX_GAIN_DB = 60.0;
     private static final double MAX_PEAK = 64.0;
@@ -194,8 +196,8 @@ public class ReplayGainManager {
 
         double linearScale = Math.pow(10.0, (gainDb + targetOffsetDb + preAmpDb) / 20.0);
 
-        // With the guard, the loudest sample may reach but not pass full scale; without it, only lower
-        double ceiling = preventClipping ? Math.min(1.0 / peak, MAX_BOOST) : 1.0;
+        // With the guard, the loudest sample may reach but not pass the limiter threshold; without it, only lower
+        double ceiling = preventClipping ? Math.min(LIMITER_THRESHOLD / peak, MAX_BOOST) : 1.0;
         return new Leveling(Leveling.Kind.APPLIED, (float) Math.max(0.01, Math.min(linearScale, ceiling)), album);
     }
 

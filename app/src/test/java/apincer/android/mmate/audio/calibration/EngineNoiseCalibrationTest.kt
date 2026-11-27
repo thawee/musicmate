@@ -107,7 +107,7 @@ class EngineNoiseCalibrationTest {
         val corrected = recording(filter(speaker, filter(fit.bands, sweep.samples)))
         addTone(corrected, 160.0, 0.2)
         val checked = analyzer.analyze(corrected) as Take.Accepted
-        val verdict = PeqFitter.verify(fit, checked)
+        val verdict = PeqFitter.verify(fit, take, checked)
         assertTrue("Reliable frequencies should verify: ${verdict?.worstDeviationDb} dB", verdict?.passed == true)
     }
 

@@ -8,6 +8,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.exoplayer.audio.AudioSink
 import apincer.android.mmate.audio.dsp.CarDsp
 import apincer.android.mmate.audio.dsp.CarDspSettings
+import apincer.android.mmate.audio.dsp.PeqBand
 import apincer.android.mmate.audio.dsp.TruePeakLimiter
 import io.mockk.every
 import io.mockk.mockk
@@ -20,7 +21,9 @@ import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.PI
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 class LookaheadAudioSinkTest {
     private val delegate = mockk<AudioSink>(relaxed = true)
@@ -28,6 +31,7 @@ class LookaheadAudioSinkTest {
     private val bytes = ByteArrayOutputStream()
     private val configurations = mutableListOf<AudioSink.AudioSinkConfig>()
     private val timestamps = mutableListOf<Long>()
+    private val events = mutableListOf<String>()
     private var writeLimit = Int.MAX_VALUE
     private var ended = false
     private lateinit var sink: LookaheadAudioSink
@@ -39,10 +43,15 @@ class LookaheadAudioSinkTest {
         every { Log.i(any(), any()) } returns 0
         CarDsp.updateRoute(listOf(speaker))
         CarDsp.target = null
-        every { delegate.configure(any<AudioSink.AudioSinkConfig>()) } answers { configurations += firstArg<AudioSink.AudioSinkConfig>() }
+        every { delegate.configure(any<AudioSink.AudioSinkConfig>()) } answers {
+            configurations += firstArg<AudioSink.AudioSinkConfig>()
+            events += "configure"
+        }
+        every { delegate.handleDiscontinuity() } answers { events += "discontinuity" }
         every { delegate.handleBuffer(any(), any(), any()) } answers {
             val buffer = firstArg<ByteBuffer>()
             timestamps += secondArg<Long>()
+            events += "buffer@${secondArg<Long>()}"
             val count = minOf(writeLimit, buffer.remaining())
             val part = ByteArray(count)
             buffer.get(part)
@@ -221,10 +230,12 @@ class LookaheadAudioSinkTest {
         configure(C.ENCODING_PCM_24BIT)
         sink.handleBuffer(samples(C.ENCODING_PCM_24BIT, DoubleArray(1000) { 0.95 }), 0, 1)
         protect = false
+        // Longer than the limiter's 50 ms ramp back to unity
+        sink.handleBuffer(samples(C.ENCODING_PCM_24BIT, DoubleArray(2500) { 0.95 }), 21000, 1)
         val tail = packed(3, -8388608, -1, 0, 1, 8388607)
-        sink.handleBuffer(ByteBuffer.wrap(tail), 21000, 1)
+        sink.handleBuffer(ByteBuffer.wrap(tail), 73000, 1)
         sink.playToEndOfStream()
-        assertEquals(1005 * 3, bytes.size())
+        assertEquals(3505 * 3, bytes.size())
         assertArrayEquals(tail, bytes.toByteArray().takeLast(tail.size).toByteArray())
     }
 
@@ -251,14 +262,16 @@ class LookaheadAudioSinkTest {
             sink.handleBuffer(samples(encoding, DoubleArray(2000) { 0.95 }), 20, 1)
             CarDsp.target = null
             sink.handleBuffer(samples(encoding, DoubleArray(2000) { 0.95 }), 42000, 1)
+            // The fade-out block above still counts as active; this one outlasts the limiter's 50 ms ramp to unity
+            sink.handleBuffer(samples(encoding, DoubleArray(2500) { 0.95 }), 84000, 1)
             val tail = doubleArrayOf(-1.0, -0.25, 0.0, 0.25, 1.0)
-            sink.handleBuffer(samples(encoding, tail), 84000, 1)
+            sink.handleBuffer(samples(encoding, tail), 146000, 1)
             sink.playToEndOfStream()
             val width = if (encoding == C.ENCODING_PCM_32BIT) 4 else 3
             val expected = if (width == 4) packed(4, Int.MIN_VALUE, -536870912, 0, 536870912, Int.MAX_VALUE)
                 else packed(3, -8388608, -2097152, 0, 2097152, 8388607)
             assertArrayEquals("encoding=$encoding", expected, bytes.toByteArray().takeLast(tail.size * width).toByteArray())
-            assertEquals((4006) * width, bytes.size())
+            assertEquals(6506 * width, bytes.size())
         }
     }
 
@@ -279,6 +292,62 @@ class LookaheadAudioSinkTest {
         while (reference.drain(frame)) capture()
         assertArrayEquals(packed(3, *expectedCodes.toIntArray()), bytes.toByteArray())
     }
+
+    @Test
+    fun gaplessBoundaryKeepsEqStateAndStampsTheNewTrackAtItsTimestamp() {
+        CarDsp.target = CarDspSettings(listOf(PeqBand(PeqBand.Type.PEAK, 1000.0, 6.0, 1.0)))
+        val format = stereo(48000)
+        val continuous = playTwoTracks(format, boundary = false)
+        val gapless = playTwoTracks(format, boundary = true)
+        assertArrayEquals(continuous, gapless)
+        val latency = TruePeakLimiter(48000, 2).latencyFrames
+        assertEquals(6000L, latency * 1_000_000L / 48000)
+        val change = events.indexOf("discontinuity")
+        assertEquals("the old track's tail must not be drained at the boundary",
+            4, events.subList(0, change).count { it.startsWith("buffer") })
+        // The first buffer after the boundary opens with the held old frames, so the new track starts `latency` frames in
+        assertEquals(listOf("discontinuity", "configure", "buffer@${NEXT_TRACK_US - 6000}"),
+            events.subList(change, change + 3))
+    }
+
+    @Test
+    fun formatChangeOrEncoderDelayAtBoundaryStillResets() {
+        CarDsp.target = CarDspSettings(listOf(PeqBand(PeqBand.Type.PEAK, 1000.0, 6.0, 1.0)))
+        for (next in listOf(stereo(44100), stereo(48000).buildUpon().setEncoderDelay(576).build())) {
+            playTwoTracks(stereo(48000), boundary = true, next = next)
+            val change = events.indexOf("discontinuity")
+            assertEquals("tail drained before the change", 5, events.subList(0, change).count { it.startsWith("buffer") })
+            assertEquals(listOf("discontinuity", "configure", "buffer@$NEXT_TRACK_US"), events.subList(change, change + 3))
+        }
+    }
+
+    /** Two 4-block stereo sine tracks; with [boundary], replays Media3's gapless order: discontinuity, configure, new buffer. */
+    private fun playTwoTracks(format: Format, boundary: Boolean, next: Format = format): ByteArray {
+        bytes.reset()
+        timestamps.clear()
+        events.clear()
+        sink = LookaheadAudioSink(delegate)
+        sink.configure(AudioSink.AudioSinkConfig.Builder(format).build())
+        val frames = 1024
+        for (block in 0 until 8) {
+            if (boundary && block == 4) {
+                sink.handleDiscontinuity()
+                sink.configure(AudioSink.AudioSinkConfig.Builder(next.buildUpon().build()).build())
+            }
+            val values = DoubleArray(frames * 2) {
+                val index = block * frames + it / 2
+                0.6 * sin(2 * PI * (if (it % 2 == 0) 997.0 else 1499.0) * index / 48000)
+            }
+            val pts = if (boundary && block >= 4) NEXT_TRACK_US + (block - 4) * frames * 1_000_000L / 48000
+                else block * frames * 1_000_000L / 48000
+            assertTrue(sink.handleBuffer(samples(C.ENCODING_PCM_FLOAT, values), pts, 1))
+        }
+        sink.playToEndOfStream()
+        return bytes.toByteArray()
+    }
+
+    private fun stereo(rate: Int): Format = Format.Builder().setSampleMimeType(MimeTypes.AUDIO_RAW)
+        .setSampleRate(rate).setChannelCount(2).setPcmEncoding(C.ENCODING_PCM_FLOAT).build()
 
     private fun configure(encoding: Int, rate: Int = 48000) {
         sink.configure(AudioSink.AudioSinkConfig.Builder(Format.Builder()
@@ -304,5 +373,9 @@ class LookaheadAudioSinkTest {
 
     private fun packed(width: Int, vararg values: Int): ByteArray = ByteArray(values.size * width).also { output ->
         values.forEachIndexed { index, value -> repeat(width) { byte -> output[index * width + byte] = (value shr (8 * byte)).toByte() } }
+    }
+
+    private companion object {
+        const val NEXT_TRACK_US = 10_000_000L
     }
 }

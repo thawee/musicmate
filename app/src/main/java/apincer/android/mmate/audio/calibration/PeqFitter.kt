@@ -26,7 +26,7 @@ object CarTarget {
 /** Curves on [FrequencyGrid.HZ], all aligned to the target's level. */
 class FitResult(
     val bands: List<PeqBand>,
-    /** Corrected from here up to [PeqFitter.MAX_HZ]; below, the measurement was not reliable. */
+    /** Corrected from here up to [toHz]; below, the measurement was not reliable. */
     val fromHz: Double,
     val measuredDb: DoubleArray,
     val targetDb: DoubleArray,
@@ -34,10 +34,13 @@ class FitResult(
     /** The target as far as the correction may go: boost caps, cuts-only bass and nulls applied. */
     val achievableDb: DoubleArray,
     /** Contaminated third-octave centres; correction and verification leave their margins alone. */
-    val excludedBandsHz: List<Double> = emptyList()
+    val excludedBandsHz: List<Double> = emptyList(),
+    /** Nothing above it is corrected or checked. */
+    val toHz: Double = PeqFitter.MAX_HZ
 )
 
-class Verdict(val passed: Boolean, val worstDeviationDb: Double, val worstHz: Double)
+/** [partial] when the check skipped frequencies the fit corrected, because the check sweep heard them through noise. */
+class Verdict(val passed: Boolean, val worstDeviationDb: Double, val worstHz: Double, val partial: Boolean = false)
 
 /**
  * Fits the correction: at most 10 peaking bands, cuts to -10 dB, boosts to +3 dB, no boost at all
@@ -47,6 +50,12 @@ class Verdict(val passed: Boolean, val worstDeviationDb: Double, val worstHz: Do
 object PeqFitter {
     const val MIN_HZ = 30.0
     const val MAX_HZ = 8_000.0
+    /**
+     * The fit's upper limit when the phone records through its voice-recognition path. A
+     * conservative default, not a spec: the Android CDD is recalled (not checked here) to ask
+     * that path to be flat to about +-3 dB only from 100 Hz to 4 kHz.
+     */
+    const val VOICE_MIC_MAX_HZ = 4_000.0
     const val NO_BOOST_BELOW_HZ = 100.0
     const val MAX_BOOST_DB = 3.0
     const val MAX_CUT_DB = -10.0
@@ -59,22 +68,37 @@ object PeqFitter {
     private const val VERIFY_FROM_HZ = 60.0
     private const val VERIFY_TOLERANCE_DB = 3.0
 
+    private const val EXCLUDED_WEIGHT = 8.0
+    /**
+     * Outside the fitted range the correction should stay near 0 dB. The range edges span far more
+     * points than an excluded band, so the excluded weight there traded up to 1.3 dB RMS in range
+     * for the treble; 2 kept the spill under 1 dB at about 0.2 dB RMS cost (FitRangeTest).
+     */
+    private const val OUT_OF_RANGE_WEIGHT = 2.0
+    /** A band that does not cut the weighted error by at least 1% is dropped. */
+    private const val MIN_IMPROVEMENT = 0.99
+
     private val grid = FrequencyGrid.HZ
 
-    /** [fromHz] comes from [TakeAnalyzer.reliableFromHz]; nothing below it is corrected. */
+    /**
+     * [fromHz] comes from [TakeAnalyzer.reliableFromHz]; nothing below it or above [toHz] is
+     * corrected. [maxBoostDb] 0 fits cuts only.
+     */
     @JvmStatic
     @JvmOverloads
-    fun fit(measuredDb: DoubleArray, fromHz: Double = MIN_HZ, excludedBandsHz: List<Double> = emptyList(), targetDb: DoubleArray = CarTarget.CURVE): FitResult {
+    fun fit(measuredDb: DoubleArray, fromHz: Double = MIN_HZ, excludedBandsHz: List<Double> = emptyList(), targetDb: DoubleArray = CarTarget.CURVE,
+            toHz: Double = MAX_HZ, maxBoostDb: Double = MAX_BOOST_DB): FitResult {
         require(measuredDb.size == grid.size && measuredDb.all { it.isFinite() })
         require(targetDb.size == grid.size && targetDb.all { it.isFinite() })
         val excluded = BooleanArray(grid.size) { isExcluded(grid[it], excludedBandsHz) }
-        val inRange = BooleanArray(grid.size) { grid[it] in maxOf(MIN_HZ, fromHz)..MAX_HZ && !excluded[it] }
+        val inRange = BooleanArray(grid.size) { grid[it] in maxOf(MIN_HZ, fromHz)..toHz && !excluded[it] }
         val target = targetDb.copyOf()
-        val measured = align(measuredDb, target, excludedBandsHz)
+        val measured = align(measuredDb, target, excludedBandsHz, toHz)
         // Mask before null detection as well as fitting: contaminated depths convey no information.
         val error = DoubleArray(grid.size) { if (excluded[it]) 0.0 else target[it] - measured[it] }
-        val boostCap = boostCaps(error)
+        val boostCap = boostCaps(error, maxBoostDb)
         val wanted = DoubleArray(grid.size) { if (inRange[it]) error[it].coerceIn(MAX_CUT_DB, boostCap[it]) else 0.0 }
+        val weight = DoubleArray(grid.size) { if (inRange[it]) 1.0 else if (excluded[it]) EXCLUDED_WEIGHT else OUT_OF_RANGE_WEIGHT }
 
         val bands = mutableListOf<PeqBand>()
         val skipped = BooleanArray(grid.size)
@@ -90,10 +114,17 @@ object PeqFitter {
                 skipped[worst] = true
                 continue
             }
+            val before = bands.toList()
             bands += PeqBand(PeqBand.Type.PEAK, grid[worst], gain, qOf(residual, worst))
-            refineGains(bands, wanted, boostCap, inRange, excluded)
+            refineGains(bands, wanted, boostCap, weight)
+            // Near a range edge a new band can only trade in-range error for spill; stacking such bands diverges
+            if (cost(bands, wanted, weight) > cost(before, wanted, weight) * MIN_IMPROVEMENT) {
+                bands.clear()
+                bands += before
+                skipped[worst] = true
+            }
         }
-        enforceLimits(bands, excludedBandsHz)
+        enforceLimits(bands, excludedBandsHz, maxBoostDb)
 
         val correction = response(bands)
         return FitResult(
@@ -103,34 +134,47 @@ object PeqFitter {
             targetDb = target,
             predictedDb = DoubleArray(grid.size) { measured[it] + correction[it] },
             achievableDb = DoubleArray(grid.size) { measured[it] + wanted[it] },
-            excludedBandsHz = excludedBandsHz.toList()
+            excludedBandsHz = excludedBandsHz.toList(),
+            toHz = toHz
         )
     }
 
-    /** Checks a measurement taken with the correction applied against the achievable target. */
+    /**
+     * Checks what the correction changed at one spot: [corrected], measured there through it, minus
+     * [original], measured there without it, against the bands' own response. Both takes share the
+     * microphone and the spot, so the room and mic cancel and only the correction is left. Bands
+     * either take heard through noise are skipped; null when nothing reliable is left to compare.
+     */
     @JvmStatic
-    fun verify(fit: FitResult, take: Take.Accepted): Verdict? {
-        val takes = listOf(take)
-        if (TakeAnalyzer.unreliableBands(takes).any { it !in fit.excludedBandsHz } ||
-            TakeAnalyzer.reliableFromHz(takes) > maxOf(VERIFY_FROM_HZ, fit.fromHz)) return null
-        return verify(fit, take.responseDb)
+    fun verify(fit: FitResult, original: Take.Accepted, corrected: Take.Accepted): Verdict? {
+        val takes = listOf(original, corrected)
+        return verify(fit, original.responseDb, corrected.responseDb,
+            (fit.excludedBandsHz + TakeAnalyzer.unreliableBands(takes)).distinct(), TakeAnalyzer.reliableFromHz(takes))
     }
 
-    /** Checks an already validated response; callers with SNR information should use the take overload. */
+    /** As the take overload, for responses already known reliable outside [excludedBandsHz] and above [reliableFromHz]. */
     @JvmStatic
-    fun verify(fit: FitResult, correctedDb: DoubleArray): Verdict {
-        val corrected = align(correctedDb, fit.targetDb, fit.excludedBandsHz)
-        var worst = 0.0
+    @JvmOverloads
+    fun verify(fit: FitResult, originalDb: DoubleArray, correctedDb: DoubleArray,
+               excludedBandsHz: List<Double> = fit.excludedBandsHz, reliableFromHz: Double = MIN_HZ): Verdict? {
+        val predicted = response(fit.bands)
+        // The preamp lowers the whole sweep; aligning on the midrange removes that flat offset
+        val change = align(DoubleArray(grid.size) { correctedDb[it] - originalDb[it] }, predicted, excludedBandsHz, fit.toHz)
+        val fromHz = maxOf(VERIFY_FROM_HZ, fit.fromHz, reliableFromHz)
+        var worst = -1.0
         var worstHz = 0.0
         for (g in grid.indices) {
-            if (grid[g] < maxOf(VERIFY_FROM_HZ, fit.fromHz) || grid[g] > MAX_HZ || isExcluded(grid[g], fit.excludedBandsHz)) continue
-            val deviation = abs(corrected[g] - fit.achievableDb[g])
+            if (grid[g] < fromHz || grid[g] > fit.toHz || isExcluded(grid[g], excludedBandsHz)) continue
+            val deviation = abs(change[g] - predicted[g])
             if (deviation > worst) {
                 worst = deviation
                 worstHz = grid[g]
             }
         }
-        return Verdict(worst <= VERIFY_TOLERANCE_DB, worst, worstHz)
+        if (worst < 0) return null
+        val checkedFromHz = maxOf(VERIFY_FROM_HZ, fit.fromHz)
+        val partial = excludedBandsHz.any { it !in fit.excludedBandsHz && it in checkedFromHz..fit.toHz } || fromHz > checkedFromHz
+        return Verdict(worst <= VERIFY_TOLERANCE_DB, worst, worstHz, partial)
     }
 
     /** Combined gain of [bands] in dB on the grid. */
@@ -150,10 +194,10 @@ object PeqFitter {
     /** Aligns over reliable 200 Hz-2 kHz points, or the remaining fit range if all are masked. */
     @JvmStatic
     @JvmOverloads
-    fun align(curve: DoubleArray, target: DoubleArray, excludedBandsHz: List<Double> = emptyList()): DoubleArray {
+    fun align(curve: DoubleArray, target: DoubleArray, excludedBandsHz: List<Double> = emptyList(), toHz: Double = MAX_HZ): DoubleArray {
         val reliable = grid.indices.filter { !isExcluded(grid[it], excludedBandsHz) }
         val normal = reliable.filter { grid[it] in 200.0..2_000.0 }
-        val points = normal.ifEmpty { reliable.filter { grid[it] in MIN_HZ..MAX_HZ } }
+        val points = normal.ifEmpty { reliable.filter { grid[it] in MIN_HZ..toHz } }
         val differences = points.map { target[it] - curve[it] }.sorted()
         val offset = if (differences.isEmpty()) 0.0 else differences[differences.size / 2]
         return DoubleArray(curve.size) { curve[it] + offset }
@@ -164,15 +208,16 @@ object PeqFitter {
      * keeps a boost just above 100 Hz from spilling below it and gives the fit a continuous goal.
      */
     @JvmStatic
-    fun boostCap(frequencyHz: Double): Double = when {
+    @JvmOverloads
+    fun boostCap(frequencyHz: Double, maxBoostDb: Double = MAX_BOOST_DB): Double = when {
         frequencyHz < NO_BOOST_BELOW_HZ -> 0.0
-        frequencyHz < 2 * NO_BOOST_BELOW_HZ -> MAX_BOOST_DB * ln(frequencyHz / NO_BOOST_BELOW_HZ) / ln(2.0)
-        else -> MAX_BOOST_DB
+        frequencyHz < 2 * NO_BOOST_BELOW_HZ -> maxBoostDb * ln(frequencyHz / NO_BOOST_BELOW_HZ) / ln(2.0)
+        else -> maxBoostDb
     }
 
     /** [boostCap], and 0 in a narrow deep null (with a small margin). */
-    private fun boostCaps(error: DoubleArray): DoubleArray {
-        val caps = DoubleArray(grid.size) { boostCap(grid[it]) }
+    private fun boostCaps(error: DoubleArray, maxBoostDb: Double): DoubleArray {
+        val caps = DoubleArray(grid.size) { boostCap(grid[it], maxBoostDb) }
         var g = 0
         while (g < grid.size) {
             if (error[g] <= NULL_DEPTH_DB) {
@@ -199,9 +244,13 @@ object PeqFitter {
         return (1 / (2 * sinh(ln(2.0) / 2 * octaves))).coerceIn(0.5, 6.0)
     }
 
-    /** A few damped Gauss-Newton steps on the gains, centres and Q fixed, within each band's caps. */
-    private fun refineGains(bands: MutableList<PeqBand>, wanted: DoubleArray, boostCap: DoubleArray, inRange: BooleanArray, excluded: BooleanArray) {
-        val points = grid.indices.filter { inRange[it] || excluded[it] }
+    /**
+     * A few damped Gauss-Newton steps on the gains, centres and Q fixed, within each band's caps.
+     * Every grid point counts: outside the fitted range and in excluded bands [wanted] is 0 dB, so
+     * a broad band near either end of the range cannot spill unchecked past it.
+     */
+    private fun refineGains(bands: MutableList<PeqBand>, wanted: DoubleArray, boostCap: DoubleArray, weight: DoubleArray) {
+        val points = grid.indices
         repeat(6) {
             val residual = minus(wanted, response(bands))
             val n = bands.size
@@ -211,8 +260,8 @@ object PeqFitter {
                 val down = single(bands[b].copy(gainDb = bands[b].gainDb - step))
                 DoubleArray(grid.size) { (up[it] - down[it]) / (2 * step) }
             }
-            val normal = Array(n) { i -> DoubleArray(n) { j -> points.sumOf { jacobian[i][it] * jacobian[j][it] * if (excluded[it]) 8.0 else 1.0 } } }
-            val rhs = DoubleArray(n) { i -> points.sumOf { jacobian[i][it] * residual[it] * if (excluded[it]) 8.0 else 1.0 } }
+            val normal = Array(n) { i -> DoubleArray(n) { j -> points.sumOf { jacobian[i][it] * jacobian[j][it] * weight[it] } } }
+            val rhs = DoubleArray(n) { i -> points.sumOf { jacobian[i][it] * residual[it] * weight[it] } }
             for (i in 0 until n) normal[i][i] += 1e-3 * max(normal[i][i], 1e-6)
             val delta = solve(normal, rhs) ?: return
             for (b in 0 until n) {
@@ -223,7 +272,7 @@ object PeqFitter {
     }
 
     /** Enforces boost caps and protected-band limits on combined tails, including mask edges. */
-    private fun enforceLimits(bands: MutableList<PeqBand>, excludedBandsHz: List<Double>) {
+    private fun enforceLimits(bands: MutableList<PeqBand>, excludedBandsHz: List<Double>, maxBoostDb: Double) {
         val frequencies = grid.toList() + excludedBandsHz.flatMap { centre ->
             // Finer than the measurement grid, with exact protected-region boundaries.
             (-48..48).map { centre * 2.0.pow(it / 192.0) }
@@ -237,7 +286,7 @@ object PeqFitter {
             var excess = 0.0
             var direction = 1.0
             for (g in frequencies.indices) {
-                val overBoost = combined[g] - boostCap(frequencies[g])
+                val overBoost = combined[g] - boostCap(frequencies[g], maxBoostDb)
                 val overProtected = if (excluded[g]) abs(combined[g]) - 0.98 else 0.0
                 val over = max(overBoost, overProtected)
                 if (over > excess + 1e-3) {
@@ -259,6 +308,11 @@ object PeqFitter {
     }
 
     private fun single(band: PeqBand) = response(listOf(band))
+
+    private fun cost(bands: List<PeqBand>, wanted: DoubleArray, weight: DoubleArray): Double {
+        val residual = minus(wanted, response(bands))
+        return grid.indices.sumOf { residual[it] * residual[it] * weight[it] }
+    }
 
     private fun minus(a: DoubleArray, b: DoubleArray) = DoubleArray(a.size) { a[it] - b[it] }
 

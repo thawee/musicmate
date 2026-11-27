@@ -116,22 +116,29 @@ public class ReplayGainManagerTest {
     }
 
     @Test
-    public void guardedQuietTrackIsRaisedOnlyUntilItsPeakReachesFullScale() {
-        ReplayGainManager.Leveling room = ReplayGainManager.level("track", STREAMING, 0f, true, tags(1.0, 0.5));
+    public void guardedQuietTrackIsRaisedOnlyUntilItsPeakReachesTheLimiterThreshold() {
+        ReplayGainManager.Leveling room = ReplayGainManager.level("track", STREAMING, 0f, true, tags(1.0, 0.4));
         assertEquals(5.0, room.appliedDb(), 0.01);
         ReplayGainManager.Leveling capped = ReplayGainManager.level("track", STREAMING, 0f, true, tags(6.0, 0.8));
-        assertEquals(1.0 / 0.8, capped.volume, 0.0001);
+        assertEquals(-2.2 - 20 * Math.log10(0.8), capped.appliedDb(), 0.001);
         ReplayGainManager.Leveling badPeak = ReplayGainManager.level("track", STREAMING, 0f, true, tags(30.0, 0.001));
         assertEquals(12.0, badPeak.appliedDb(), 0.01);
     }
 
     @Test
     public void clippingGuardLowersGainToThePeak() {
-        // -1 dB gain with a 1.2 peak would clip; the guard caps the scale at 1 / 1.2
+        // -1 dB gain with a 1.2 peak would be limited; the guard puts the peak at the limiter threshold
         ReplayGainManager.Leveling guarded = ReplayGainManager.level("track", RG2, 0f, true, tags(-1.0, 1.2));
-        assertEquals(1.0 / 1.2, guarded.volume, 0.0001);
+        assertEquals(-2.2 - 20 * Math.log10(1.2), guarded.appliedDb(), 0.001);
         ReplayGainManager.Leveling unguarded = ReplayGainManager.level("track", RG2, 0f, false, tags(-1.0, 1.2));
         assertEquals(-1.0, unguarded.appliedDb(), 0.01);
+    }
+
+    @Test
+    public void clippingGuardAlsoCutsAnAttenuatedTrackWhosePeakWouldBeLimited() {
+        // A -1 dB cut leaves a full-scale peak at -1 dBFS, above the -2.2 dB limiter threshold
+        ReplayGainManager.Leveling guarded = ReplayGainManager.level("track", RG2, 0f, true, tags(-1.0, 1.0));
+        assertEquals(-2.2, guarded.appliedDb(), 0.001);
     }
 
     @Test
@@ -200,14 +207,16 @@ public class ReplayGainManagerTest {
     public void directlyConstructedInvalidPeaksCannotAllowBoost() {
         for (double peak : new double[]{Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0, -1, 999}) {
             ReplayGainManager.ReplayGainInfo info = tags(6, peak);
+            // An unknown peak counts as full scale, so the guard holds it at the limiter threshold
+            float guarded = (float) ReplayGainManager.LIMITER_THRESHOLD;
             ReplayGainManager.Leveling track = ReplayGainManager.level("track", RG2, 0f, true, info);
-            assertEquals(1.0f, track.volume, 0f);
+            assertEquals(guarded, track.volume, 0f);
             info.albumGainDb = 6;
             info.albumPeak = peak;
             info.hasAlbumGain = true;
             ReplayGainManager.Leveling album = ReplayGainManager.level("album", RG2, 0f, true, info);
             assertTrue(album.album);
-            assertEquals(1.0f, album.volume, 0f);
+            assertEquals(guarded, album.volume, 0f);
         }
     }
 
@@ -230,11 +239,12 @@ public class ReplayGainManagerTest {
         double gainMinus6Db = Math.pow(10.0, -6.0206 / 20.0);
         assertEquals(0.5, gainMinus6Db, EPSILON);
 
-        // Peak limiter anti-clipping formula: if (linear * peak > 1.0) linear = 1.0 / peak
+        // Clipping guard: if (linear * peak > threshold) linear = threshold / peak
         double peak = 1.2;
         double requestedLinear = 1.5;
-        assertTrue("Linear * peak exceeds 1.0", requestedLinear * peak > 1.0);
-        double safeLinear = 1.0 / peak;
-        assertTrue("Safe linear * peak does not exceed 1.0", safeLinear * peak <= 1.0 + EPSILON);
+        double threshold = ReplayGainManager.LIMITER_THRESHOLD;
+        assertTrue("Linear * peak exceeds the limiter threshold", requestedLinear * peak > threshold);
+        double safeLinear = threshold / peak;
+        assertTrue("Safe linear * peak stays at the threshold", safeLinear * peak <= threshold + EPSILON);
     }
 }

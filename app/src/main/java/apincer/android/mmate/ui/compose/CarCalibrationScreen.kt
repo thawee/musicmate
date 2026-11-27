@@ -89,7 +89,9 @@ fun CarCalibrationScreen(
     targetName: String? = null,
     onImportTarget: () -> Unit = {},
     onFixtureConfirmed: (Boolean) -> Unit = {},
-    onFixtureName: (String) -> Unit = {}
+    onFixtureName: (String) -> Unit = {},
+    onCheck: () -> Unit = {},
+    onSkipCheck: () -> Unit = {}
 ) {
     val headphone = output == CalibrationOutput.HEADPHONE
     var fixtureConfirmed by remember { mutableStateOf(false) }
@@ -174,6 +176,12 @@ fun CarCalibrationScreen(
                         Spacer(Modifier.height(12.dp))
                     }
                     PrimaryButton("Save and check") { onSave(name) }
+                }
+                is CalibrationWizard.Step.Verifying -> if (!step.measuring) Column {
+                    PrimaryButton("Start check", onClick = onCheck)
+                    TextButton(onClick = onSkipCheck, modifier = Modifier.fillMaxWidth()) {
+                        Text("Skip check", color = MusicMateDesignTokens.Brand.Gold)
+                    }
                 }
                 is CalibrationWizard.Step.Done -> PrimaryButton("Done", onClick = onClose)
                 else -> {}
@@ -353,7 +361,7 @@ private fun Countdown() {
 @Composable
 private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headphone: Boolean = false, onName: (String) -> Unit) {
     Title(if (headphone) "Your headphones, corrected" else "Your speaker, corrected")
-    Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f Hz to 8 kHz.".format(fit.fromHz))
+    Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f Hz to %.0f kHz.".format(fit.fromHz, fit.toHz / 1_000))
     Spacer(Modifier.height(16.dp))
     ResponseGraph(fit)
     NoiseNotice(fit.excludedBandsHz)
@@ -363,7 +371,7 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headph
     }
     if (!unprocessedMic) {
         Spacer(Modifier.height(12.dp))
-        Notice("Approximate: measured through the phone's voice microphone.")
+        Notice("Approximate: measured through the phone's voice microphone, so the correction only cuts and stops at %.0f kHz.".format(fit.toHz / 1_000))
     }
     Spacer(Modifier.height(20.dp))
     OutlinedTextField(
@@ -376,17 +384,23 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headph
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(Modifier.height(8.dp))
-    Small(if (headphone) "Saving selects this correction for this output. One more sweep checks the fixture response. USB EQ still needs its explicit enable switch." else "Saving makes this correction active, then one more sweep at the centre spot checks it.")
+    Small(if (headphone) "Saving selects this correction for this output. Then one more sweep can check the fixture response. USB EQ still needs its explicit enable switch." else "Saving makes this correction active. Then one more sweep at the centre spot can check it.")
 }
 
 @Composable
 private fun Verifying(step: CalibrationWizard.Step.Verifying, headphone: Boolean = false) {
-    Title("Checking the correction")
-    Body(if (headphone) "Keep the headphone seated on the same fixture for the check sweep." else "Hold the phone at the centre spot again.")
+    Title(if (step.measuring) "Checking the correction" else "Check the correction")
+    Body(if (headphone) "Keep the headphone seated on the fixture as for the last measurement." else "Hold the phone at the centre spot again.")
+    if (!step.measuring) {
+        Spacer(Modifier.height(8.dp))
+        Small("The correction is saved. The check plays one more sweep through it; skipping leaves it \"Not checked\".")
+    }
     Spacer(Modifier.height(16.dp))
     if (!headphone) PositionMap(current = 0)
-    Spacer(Modifier.height(16.dp))
-    Countdown()
+    if (step.measuring) {
+        Spacer(Modifier.height(16.dp))
+        Countdown()
+    }
     NoiseNotice(step.profile.excludedBandsHz)
 }
 
@@ -397,9 +411,10 @@ private fun Done(step: CalibrationWizard.Step.Done, headphone: Boolean = false) 
     Spacer(Modifier.height(4.dp))
     val worst = profile.worstDeviationDb ?: 0.0
     when (profile.verified) {
-        true -> Verdict(if (profile.excludedBandsHz.isEmpty()) "Within ±3 dB of the target" else "Reliable frequencies within ±3 dB", "Largest difference %.1f dB.".format(worst), MusicMateDesignTokens.Brand.AcousticTeal)
+        true -> Verdict(if (profile.excludedBandsHz.isEmpty() && !step.partialCheck) "Check passed, within ±3 dB" else "Reliable frequencies passed, within ±3 dB", "Largest difference %.1f dB.".format(worst), MusicMateDesignTokens.Brand.AcousticTeal)
         false -> Verdict("Off by up to %.1f dB".format(worst), if (headphone) "The correction is saved for this output. Reseating and measuring again may get closer." else "The correction is saved and active. Measuring again may get closer.", MusicMateDesignTokens.Brand.GoldAmber)
-        null -> Verdict("Not checked", if (headphone) "The check sweep could not be measured. The correction is saved for this output." else "The check sweep could not be measured. The correction is saved and active.", MusicMateDesignTokens.Brand.GoldAmber)
+        null -> Verdict("Not checked", (if (step.checkSkipped) "The check sweep was skipped." else "The check sweep could not be measured.") +
+            if (headphone) " The correction is saved for this output." else " The correction is saved and active.", MusicMateDesignTokens.Brand.GoldAmber)
     }
     NoiseNotice(profile.excludedBandsHz)
     Spacer(Modifier.height(16.dp))

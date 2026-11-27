@@ -10,6 +10,7 @@ import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
+import android.media.audiofx.AudioEffect
 import androidx.annotation.RequiresPermission
 import apincer.android.mmate.utils.AudioOutputHelper
 import kotlin.math.max
@@ -90,7 +91,9 @@ class SweepRecorder(context: Context) : SweepCapture {
         }, "CarCalibrationSweep")
         val focus = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE).setAudioAttributes(MEDIA).build()
         var problem: String? = null
+        var effects = emptyList<AudioEffect>()
         try {
+            effects = disableMicEffects(record.audioSessionId)
             if (audioManager.requestAudioFocus(focus) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 return Capture(DoubleArray(0), "Another app is holding the audio, such as a call. End it and measure again.")
             }
@@ -112,6 +115,7 @@ class SweepRecorder(context: Context) : SweepCapture {
             if (player.isAlive) player.join(1_000)
             track.release()
             runCatching { record.stop() }
+            effects.forEach { runCatching { it.release() } }
             record.release()
             audioManager.abandonAudioFocusRequest(focus)
         }

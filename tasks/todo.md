@@ -1695,3 +1695,15 @@ Generalise the Poweramp monitor into a display-only listener for other players, 
 - [ ] Commit and PR: skip until the user asks (CLAUDE.md).
 - [ ] (waiting on user: on the phone, play in Neutron, UAPP and HiBy, and run `adb shell dumpsys activity broadcasts history | grep -iE 'metachanged|playstatechanged|hiby'`)
 
+## MateTune review fixes (2026-11-27)
+Review findings are in the 2026-11-27 session reply; items 1 to 3 are playback, 4 to 6 are speaker tuning.
+- [x] 1. Gapless track change keeps DSP and limiter state when the format is unchanged, and re-anchors timestamps instead of draining (LookaheadAudioSink).
+- [x] 2. Limiter on/off ramps its gain instead of stepping, and still ends at exact unity when bypassed (TruePeakLimiter).
+- [x] 3. ReplayGain clip protection caps the boost at the limiter's threshold, not full scale (ReplayGainManager and its caller).
+- [x] 4. The sweep recorder turns off AGC, noise suppression and echo cancelling; a voice-mic fit is limited to cuts up to 4 kHz.
+- [x] 5. The check sweep compares the measured change at the centre spot with the predicted change, not with the five-spot target.
+- [x] 6. The fitter keeps the correction near 0 dB outside the fitted range.
+- [x] Each fix has a test that fails before it; unit tests pass; diff reviewed by the advisor.
+- [ ] (waiting on user: tune one speaker on the phone through to the check step) No real sweep has run, because the emulator blocks the mic.
+- [ ] (waiting on user: play a gapless album with EQ on through headphones or USB) Listen for clicks at track changes.
+- [ ] Commit and PR: skip until the user asks.

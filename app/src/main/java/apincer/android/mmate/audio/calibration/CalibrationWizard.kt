@@ -62,8 +62,10 @@ class CalibrationWizard internal constructor(
         data object Fitting : Step
         /** [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name; [problem] says why saving failed. */
         class Result(val fit: FitResult, val carName: String?, val problem: String? = null) : Step
-        class Verifying(val profile: CarProfile) : Step
-        class Done(val profile: CarProfile) : Step
+        /** The saved correction waits for [check] or [skipCheck]; [measuring] while the check sweep plays. */
+        class Verifying(val profile: CarProfile, val fit: FitResult, val measuring: Boolean = false) : Step
+        /** [partialCheck] when the check sweep compared fewer frequencies than the fit corrected. */
+        class Done(val profile: CarProfile, val checkSkipped: Boolean = false, val partialCheck: Boolean = false) : Step
     }
 
     private val current = MutableStateFlow<Step>(Step.Checklist)
@@ -76,7 +78,8 @@ class CalibrationWizard internal constructor(
     val hasUnsavedWork: Boolean
         get() = when (val s = current.value) {
             is Step.Position -> s.index > 0 || s.measuring
-            Step.Fitting, is Step.Result, is Step.Verifying -> true
+            is Step.Verifying -> s.measuring
+            Step.Fitting, is Step.Result -> true
             else -> false
         }
 
@@ -131,9 +134,12 @@ class CalibrationWizard internal constructor(
         val fit = attempt("Fit") {
             withContext(Dispatchers.Default) {
                 val takes = measurements.takes
+                val unprocessed = recorder.unprocessed
                 PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }),
                     maxOf(TakeAnalyzer.reliableFromHz(takes), if (output == CalibrationOutput.HEADPHONE) 100.0 else PeqFitter.MIN_HZ),
-                    TakeAnalyzer.unreliableBands(takes), if (output == CalibrationOutput.HEADPHONE) requireNotNull(rigTarget).curve else CarTarget.CURVE)
+                    TakeAnalyzer.unreliableBands(takes), if (output == CalibrationOutput.HEADPHONE) requireNotNull(rigTarget).curve else CarTarget.CURVE,
+                    toHz = if (unprocessed) PeqFitter.MAX_HZ else PeqFitter.VOICE_MIC_MAX_HZ,
+                    maxBoostDb = if (unprocessed) PeqFitter.MAX_BOOST_DB else 0.0)
             }
         }
         if (fit == null) {
@@ -145,9 +151,8 @@ class CalibrationWizard internal constructor(
         current.value = Step.Result(fit, endpoint?.name ?: identity?.name)
     }
 
-    /** Saves the profile, makes it the active correction, then measures once more through it. */
-    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    fun saveAndVerify(name: String) {
+    /** Saves the profile and makes it the active correction; the check sweep waits for [check]. */
+    fun save(name: String) {
         val result = current.value as? Step.Result ?: return
         if (saving) return
         saving = true
@@ -163,6 +168,7 @@ class CalibrationWizard internal constructor(
                 kind = car?.kind,
                 bands = fit.bands,
                 fromHz = fit.fromHz,
+                toHz = fit.toHz,
                 measuredDb = fit.measuredDb.toList(),
                 targetDb = fit.targetDb.toList(),
                 predictedDb = fit.predictedDb.toList(),
@@ -202,8 +208,20 @@ class CalibrationWizard internal constructor(
                 saving = false
                 return@launch
             }
-            current.value = Step.Verifying(profile)
+            current.value = Step.Verifying(profile, fit)
+        }
+    }
 
+    /** Measures once more at the reference spot, through the saved correction. */
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    fun check() {
+        val waiting = current.value as? Step.Verifying ?: return
+        if (waiting.measuring) return
+        current.value = Step.Verifying(waiting.profile, waiting.fit, measuring = true)
+        val fit = waiting.fit
+        // The centre spot for a speaker; a headphone fixture is still on its last seating
+        val original = if (output == CalibrationOutput.HEADPHONE) measurements.takes.last() else measurements.takes.first()
+        scope.launch {
             // A check sweep that cannot run leaves the saved correction unverified
             val verdict = attempt("Check sweep") {
                 withContext(Dispatchers.Default) {
@@ -217,14 +235,24 @@ class CalibrationWizard internal constructor(
                     }
                     val capture = recorder.capture(sweep.toPcm16(corrected)) { !isActive }
                     val take = if (capture.problem == null) analyzer.analyze(capture.recording) else null
-                    (take as? Take.Accepted)?.let { PeqFitter.verify(fit, it) }
+                    (take as? Take.Accepted)?.let { PeqFitter.verify(fit, original, it) }
                 }
             }
-            val checked = profile.copy(verified = verdict?.passed, worstDeviationDb = verdict?.worstDeviationDb)
-            if (output == CalibrationOutput.SPEAKER) attempt("Saving the check") { withContext(Dispatchers.IO) { store.save(checked) } }
-            current.value = Step.Done(checked)
-            saving = false
+            val checked = waiting.profile.copy(verified = verdict?.passed, worstDeviationDb = verdict?.worstDeviationDb)
+            if (output == CalibrationOutput.SPEAKER) attempt("Saving the check") { withContext(Dispatchers.IO) { CarDspPreferences.profiles(app).save(checked) } }
+            finish(checked, checkSkipped = false, partialCheck = verdict?.partial == true)
         }
+    }
+
+    /** Leaves the saved correction "Not checked". */
+    fun skipCheck() {
+        val waiting = current.value as? Step.Verifying ?: return
+        if (!waiting.measuring) finish(waiting.profile, checkSkipped = true)
+    }
+
+    private fun finish(profile: CarProfile, checkSkipped: Boolean, partialCheck: Boolean = false) {
+        current.value = Step.Done(profile, checkSkipped, partialCheck)
+        saving = false
     }
 
     /** Android audio and storage can fail at any time; [block]'s failure is logged and returns null. */

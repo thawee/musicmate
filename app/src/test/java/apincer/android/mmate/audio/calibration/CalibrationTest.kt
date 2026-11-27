@@ -131,11 +131,11 @@ class CalibrationTest {
     fun aPreFilteredVerifySweepPassesWhereTheRawCarFails() {
         val take = analyzer.analyze(record(through(car, sweep.samples), 0.3, noiseRms = 1e-4)) as Take.Accepted
         val fit = PeqFitter.fit(take.responseDb)
-        assertFalse(PeqFitter.verify(fit, take.responseDb).passed)
+        assertFalse(PeqFitter.verify(fit, take, take)!!.passed)
 
         val corrected = DspChain(fit.bands, sweep.sampleRate, 1).let { chain -> filter(chain, sweep.samples) }
         val verifyTake = analyzer.analyze(record(through(car, corrected), 0.3, noiseRms = 1e-4)) as Take.Accepted
-        val verdict = PeqFitter.verify(fit, verifyTake.responseDb)
+        val verdict = PeqFitter.verify(fit, take, verifyTake)!!
         assertTrue("worst ${verdict.worstDeviationDb} dB at ${verdict.worstHz} Hz", verdict.passed)
     }
 
@@ -151,7 +151,7 @@ class CalibrationTest {
         val correction = PeqFitter.response(fit.bands)
         for (g in grid.indices) if (grid[g] in 30.0..from - 10) assertTrue("${grid[g]} Hz: ${correction[g]}", abs(correction[g]) <= 1.0)
         val corrected = record(through(car, filter(DspChain(fit.bands, sweep.sampleRate, 1), sweep.samples)), 0.3, noiseRms = 1e-4)
-        val verdict = PeqFitter.verify(fit, (analyzer.analyze(corrected) as Take.Accepted).responseDb)
+        val verdict = PeqFitter.verify(fit, take, analyzer.analyze(corrected) as Take.Accepted)!!
         assertTrue("worst ${verdict.worstDeviationDb} dB at ${verdict.worstHz} Hz", verdict.passed && verdict.worstHz >= from)
     }
 
