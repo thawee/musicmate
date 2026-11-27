@@ -98,13 +98,20 @@ sealed class Take {
      * follows [TakeAnalyzer.SNR_BANDS_HZ]; low bass and a bounded set of noisy bands may be under
      * the limit. Fitting must respect both [TakeAnalyzer.reliableFromHz] and [TakeAnalyzer.unreliableBands].
      */
-    class Accepted(val responseDb: DoubleArray, val bandSnrDb: DoubleArray, val delaySeconds: Double) : Take()
+    class Accepted(val responseDb: DoubleArray, val bandSnrDb: DoubleArray, val delaySeconds: Double,
+                   /** When the direct sound starts, which can be ahead of the loudest reflection at [delaySeconds]. */
+                   val arrivalSeconds: Double = delaySeconds,
+                   /** Each side measured alone; then this take is their power average. */
+                   val sides: Sides? = null) : Take()
 
     class Rejected(val reason: Reason, val detail: String) : Take()
 
     /** [CAPTURE] means the recording itself failed; its detail is complete advice for the user. */
     enum class Reason { CLIPPED, NO_RESPONSE, TOO_QUIET, TOO_SHORT, CAPTURE }
 }
+
+/** One speaker spot measured a side at a time, from [StereoSweep]. */
+class Sides(val left: Take.Accepted, val right: Take.Accepted)
 
 /** Keeps the session's noise exclusions bounded even when noise changes between positions. */
 class MeasurementSession {
@@ -160,11 +167,14 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
         val noisePower = if (lateNoise.sum() < earlyNoise.sum()) lateNoise else earlyNoise
         val noiseRms = sqrt(noisePower.sum() / noisePower.size)
         val peakRms = sqrt(irPower.sum() / irPower.size)
-        if (peakRms < noiseRms * MIN_PEAK_RATIO) {
+        // Equal only in digital silence, where both are zero
+        if (peakRms <= noiseRms * MIN_PEAK_RATIO) {
             return Take.Rejected(Take.Reason.NO_RESPONSE, "No sweep found in the recording")
         }
 
         val delay = (peak - (sweep.length - 1)).toDouble() / rate
+        val reach = max(searchFrom, peak - (rate * ONSET_SECONDS).roundToInt())
+        val onset = (reach until peak).firstOrNull { abs(output[it]) >= abs(output[peak]) * ONSET_RATIO } ?: peak
         // The recorder leaves silence before and after playback. Compare it with the raw sweep
         // as well: matched filtering alone can give steady background noise processing gain.
         val ambientLength = (rate * AMBIENT_SECONDS).roundToInt()
@@ -185,7 +195,7 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
             val worst = noisy.minBy { bandSnr[it] }
             return Take.Rejected(Take.Reason.TOO_QUIET, "Only %.0f dB above the noise near %.0f Hz".format(bandSnr[worst], SNR_BANDS_HZ[worst]))
         }
-        return Take.Accepted(smoothedDb(irPower, rate), bandSnr, delay)
+        return Take.Accepted(smoothedDb(irPower, rate), bandSnr, delay, (onset - (sweep.length - 1)).toDouble() / rate)
     }
 
     private fun ambientPower(signal: DoubleArray, start: Int, length: Int): DoubleArray {
@@ -242,6 +252,9 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
         private const val AMBIENT_SECONDS = 0.25
         private const val AMBIENT_FFT_SIZE = 1 shl 14
         private const val MIN_PEAK_RATIO = 3.0
+        /** How far ahead of the peak the direct sound may start, and how loud it must be to count. */
+        private const val ONSET_SECONDS = 0.010
+        private const val ONSET_RATIO = 0.1
         private const val TINY = 1e-30
 
         /** 1/3-octave centres from 31.5 Hz to 8 kHz, the corrected range. */

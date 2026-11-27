@@ -21,9 +21,12 @@ interface SweepCapture {
     val unprocessed: Boolean
     val micSource: String
 
-    /** Blocks for about [SweepRecorder.TOTAL_SECONDS]; call off the main thread. [cancelled] stops it early. */
+    /**
+     * Plays [pcm], interleaved over [channels], and records from [SweepRecorder.LEAD_SECONDS] before it to
+     * [SweepRecorder.TAIL_SECONDS] after it. Blocks meanwhile; call off the main thread. [cancelled] stops it early.
+     */
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    fun capture(pcm: ShortArray, cancelled: () -> Boolean = { false }): SweepRecorder.Capture
+    fun capture(pcm: ShortArray, channels: Int = 1, cancelled: () -> Boolean = { false }): SweepRecorder.Capture
 }
 
 /**
@@ -55,9 +58,10 @@ class SweepRecorder(context: Context) : SweepCapture {
         (microphones.firstOrNull { it.id == requestedMicId }?.let { "; ${it.name.take(160)}" } ?: "")
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    override fun capture(pcm: ShortArray, cancelled: () -> Boolean): Capture {
-        val total = (RATE * TOTAL_SECONDS).toInt()
+    override fun capture(pcm: ShortArray, channels: Int, cancelled: () -> Boolean): Capture {
         val lead = (RATE * LEAD_SECONDS).toInt()
+        val total = lead + pcm.size / channels + (RATE * TAIL_SECONDS).toInt()
+        val layout = if (channels == 2) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO
         val recording = FloatArray(total)
         val record = AudioRecord.Builder()
             .setAudioSource(if (unprocessed) MediaRecorder.AudioSource.UNPROCESSED else MediaRecorder.AudioSource.VOICE_RECOGNITION)
@@ -76,9 +80,9 @@ class SweepRecorder(context: Context) : SweepCapture {
             AudioTrack.Builder()
                 .setAudioAttributes(MEDIA)
                 .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setSampleRate(RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+                    .setSampleRate(RATE).setChannelMask(layout).build())
                 .setTransferMode(AudioTrack.MODE_STREAM)
-                .setBufferSizeInBytes(AudioTrack.getMinBufferSize(RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT) * 4)
+                .setBufferSizeInBytes(AudioTrack.getMinBufferSize(RATE, layout, AudioFormat.ENCODING_PCM_16BIT) * 4)
                 .build()
         } catch (failure: Exception) {
             record.release()
@@ -139,8 +143,9 @@ class SweepRecorder(context: Context) : SweepCapture {
     companion object {
         const val RATE = 48_000
         const val LEAD_SECONDS = 0.5
-        /** Lead, 10 s sweep, 3 s after. */
-        const val TOTAL_SECONDS = 13.5
+        const val TAIL_SECONDS = 3.0
+        /** A recording of one 10 s sweep. */
+        const val TOTAL_SECONDS = LEAD_SECONDS + 10 + TAIL_SECONDS
         private const val CHUNK = 4_800
         private val MEDIA: AudioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_MEDIA)

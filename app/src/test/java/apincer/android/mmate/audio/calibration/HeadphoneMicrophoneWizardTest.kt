@@ -29,7 +29,7 @@ class HeadphoneMicrophoneWizardTest {
         wizard.setTarget(RigTarget.parse("100,0\n8000,0", "Rig A"))
         try { wizard.beginHeadphone(false); fail() } catch (_: IllegalArgumentException) { }
         assertTrue(wizard.step.value is CalibrationWizard.Step.Checklist)
-        verify(exactly = 0) { recorder.capture(any(), any()) }
+        verify(exactly = 0) { recorder.capture(any(), any(), any()) }
     }
 
     @Test fun rejectsSpeakerForHeadphoneFixture() {
@@ -53,7 +53,7 @@ class HeadphoneMicrophoneWizardTest {
         wizard.measure()
         val result = await(wizard) { it is CalibrationWizard.Step.Position && !it.measuring && it.problem != null }
         assertTrue((result as CalibrationWizard.Step.Position).problem!!.contains("Output changed"))
-        verify(exactly = 0) { recorder.capture(any(), any()) }
+        verify(exactly = 0) { recorder.capture(any(), any(), any()) }
     }
 
     @Test fun importsMicrophoneProfileForCapturedUsbEndpointWithoutEnablingUsb() {
@@ -69,7 +69,7 @@ class HeadphoneMicrophoneWizardTest {
         val sweep = LogSweep()
         val recording = DoubleArray((sweep.sampleRate * SweepRecorder.TOTAL_SECONDS).toInt())
         sweep.samples.copyInto(recording, (sweep.sampleRate * SweepRecorder.LEAD_SECONDS).toInt())
-        every { recorder.capture(any(), any()) } returns SweepRecorder.Capture(recording, null)
+        every { recorder.capture(any(), any(), any()) } returns SweepRecorder.Capture(recording, null)
         val wizard = CalibrationWizard(context, scope, recorder, CalibrationOutput.HEADPHONE)
         wizard.setTarget(RigTarget.parse("100,0\n8000,0", "Rig A target.csv"))
         wizard.beginHeadphone(true)

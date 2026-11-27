@@ -67,6 +67,7 @@ import apincer.android.mmate.audio.calibration.FitResult
 import apincer.android.mmate.audio.calibration.FrequencyGrid
 import apincer.android.mmate.audio.calibration.PeqFitter
 import apincer.android.mmate.audio.calibration.SpeakerTarget
+import apincer.android.mmate.audio.calibration.StereoFit
 import apincer.android.mmate.audio.calibration.SweepRecorder
 import kotlin.math.ln
 
@@ -158,7 +159,7 @@ fun CarCalibrationScreen(
                 }
                 is CalibrationWizard.Step.Position -> Position(step, headphone)
                 CalibrationWizard.Step.Fitting -> Working("Working out the correction")
-                is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name, headphone, step.target, onTarget) { name = it }
+                is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name, headphone, step.target, onTarget, step.stereo) { name = it }
                 is CalibrationWizard.Step.Verifying -> Verifying(step, headphone)
                 is CalibrationWizard.Step.Done -> Done(step, headphone)
             }
@@ -234,7 +235,7 @@ private fun StageStrip(current: Int, finished: Boolean) {
 @Composable
 private fun Checklist(unprocessedMic: Boolean) {
     Title("Measure how your speaker sounds")
-    Body("A 10-second test sweep plays through the speaker while the phone listens at five spots around your head. MusicMate then builds an EQ that corrects it.")
+    Body("A 10-second test sweep plays through each side of the speaker in turn while the phone listens at five spots around your head. MusicMate then builds an EQ that corrects it.")
     Spacer(Modifier.height(24.dp))
     Heading("Before you start")
     listOf(
@@ -260,7 +261,7 @@ private fun Position(step: CalibrationWizard.Step.Position, headphone: Boolean =
         Small("Reseat ${step.index + 1} of 5")
         Title(if (step.index == 0) "Initial placement" else "Reseat the headphone")
         Body("Place the same ear cup on the fixture with the same seal. Between takes, remove and reseat it to average placement differences. Keep the microphone, target, volume and output unchanged.")
-        if (step.measuring) Countdown() else step.problem?.let { Notice(it) }
+        if (step.measuring) Countdown(SweepRecorder.TOTAL_SECONDS) else step.problem?.let { Notice(it) }
         NoiseNotice(step.noisyBandsHz)
         return
     }
@@ -275,9 +276,9 @@ private fun Position(step: CalibrationWizard.Step.Position, headphone: Boolean =
     PositionMap(current = step.index)
     Spacer(Modifier.height(16.dp))
     if (step.measuring) {
-        Countdown()
+        Countdown(SIDE_BY_SIDE_SECONDS)
     } else {
-        step.problem?.let { Notice(it) } ?: Small("Keep still and quiet for about 14 seconds once you press Measure.")
+        step.problem?.let { Notice(it) } ?: Small("Keep still and quiet for about %.0f seconds once you press Measure.".format(SIDE_BY_SIDE_SECONDS + 1))
     }
     NoiseNotice(step.noisyBandsHz)
 }
@@ -334,14 +335,17 @@ private fun PositionMap(current: Int) {
     }
 }
 
-/** Fills over the length of one capture; analysis follows, so it ends on "Analysing". */
+/** A speaker spot records the left sweep, then the right one. */
+private const val SIDE_BY_SIDE_SECONDS = 2 * SweepRecorder.TOTAL_SECONDS
+
+/** Fills over the [seconds] of one capture; analysis follows, so it ends on "Analysing". */
 @Composable
-private fun Countdown() {
+private fun Countdown(seconds: Double) {
     val progress = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
-        progress.animateTo(1f, tween((SweepRecorder.TOTAL_SECONDS * 1000).toInt(), easing = LinearEasing))
+        progress.animateTo(1f, tween((seconds * 1000).toInt(), easing = LinearEasing))
     }
-    val left = ((1f - progress.value) * SweepRecorder.TOTAL_SECONDS).toInt() + 1
+    val left = ((1f - progress.value) * seconds).toInt() + 1
     Text(
         if (progress.value < 1f) "Measuring. Keep still and quiet, $left s" else "Analysing",
         color = MusicMateDesignTokens.Text.Primary,
@@ -363,7 +367,8 @@ private fun Countdown() {
 
 @Composable
 private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headphone: Boolean = false,
-                   target: SpeakerTarget? = null, onTarget: (SpeakerTarget) -> Unit = {}, onName: (String) -> Unit) {
+                   target: SpeakerTarget? = null, onTarget: (SpeakerTarget) -> Unit = {}, stereo: StereoFit? = null,
+                   onName: (String) -> Unit) {
     Title(if (headphone) "Your headphones, corrected" else "Your speaker, corrected")
     Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f Hz to %.0f kHz.".format(fit.fromHz, fit.toHz / 1_000))
     if (target != null) {
@@ -381,7 +386,27 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headph
         })
     }
     Spacer(Modifier.height(16.dp))
-    ResponseGraph(fit)
+    var side by remember { mutableStateOf(Side.BOTH) }
+    if (stereo != null) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Side.entries.forEach { choice ->
+                FilterChip(selected = side == choice, onClick = { side = choice }, label = { Text(choice.label) })
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+    ResponseGraph(when (side) {
+        Side.LEFT -> stereo?.left
+        Side.RIGHT -> stereo?.right
+        Side.BOTH -> null
+    } ?: fit)
+    if (stereo != null) {
+        Spacer(Modifier.height(8.dp))
+        Small(sidesSummary(stereo))
+    } else if (target != null) {
+        Spacer(Modifier.height(8.dp))
+        Small("Only one side of the speaker made sound, so one correction serves both sides.")
+    }
     NoiseNotice(fit.excludedBandsHz)
     if (fit.fromHz > 31) {
         Spacer(Modifier.height(12.dp))
@@ -405,6 +430,24 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headph
     Small(if (headphone) "Saving selects this correction for this output. Then one more sweep can check the fixture response. USB EQ still needs its explicit enable switch." else "Saving makes this correction active. Then one more sweep at the centre spot can check it.")
 }
 
+private enum class Side(val label: String) { BOTH("Both"), LEFT("Left"), RIGHT("Right") }
+
+/** Says what the delay and balance do, in the listener's terms. */
+private fun sidesSummary(stereo: StereoFit): String {
+    val c = stereo.correction
+    val timing = when {
+        c.leftDelayMs > 0.05 -> "The left side waits %.1f ms so both sides reach you together.".format(c.leftDelayMs)
+        c.rightDelayMs > 0.05 -> "The right side waits %.1f ms so both sides reach you together.".format(c.rightDelayMs)
+        else -> "Both sides already reach you together."
+    }
+    val level = when {
+        c.balanceDb > 0.05 -> "The left side plays %.1f dB quieter to match the right.".format(c.balanceDb)
+        c.balanceDb < -0.05 -> "The right side plays %.1f dB quieter to match the left.".format(-c.balanceDb)
+        else -> "Both sides play at the same level."
+    }
+    return "Each side has its own correction. $timing $level"
+}
+
 @Composable
 private fun Verifying(step: CalibrationWizard.Step.Verifying, headphone: Boolean = false) {
     Title(if (step.measuring) "Checking the correction" else "Check the correction")
@@ -417,7 +460,7 @@ private fun Verifying(step: CalibrationWizard.Step.Verifying, headphone: Boolean
     if (!headphone) PositionMap(current = 0)
     if (step.measuring) {
         Spacer(Modifier.height(16.dp))
-        Countdown()
+        Countdown(if (step.stereo != null) SIDE_BY_SIDE_SECONDS else SweepRecorder.TOTAL_SECONDS)
     }
     NoiseNotice(step.profile.excludedBandsHz)
 }

@@ -36,6 +36,8 @@ class CalibrationWizard internal constructor(
     private val app = context.applicationContext
     private val sweep = LogSweep()
     private val analyzer by lazy { TakeAnalyzer(Deconvolver(sweep)) }
+    /** Speakers are measured a side at a time; a headphone fixture has one microphone for one side. */
+    private val stereoSweep = if (output == CalibrationOutput.SPEAKER) StereoSweep(sweep) else null
     private val measurements = MeasurementSession()
     private val takeGuidance = CalibrationTakeGuidance()
     /** Set from the first tap on Save until Done, so a second tap cannot save twice. */
@@ -65,9 +67,11 @@ class CalibrationWizard internal constructor(
          * [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name; [problem] says why saving failed.
          * [target] is what a speaker fit aimed for, null for headphones, which aim for the fixture's target.
          */
-        class Result(val fit: FitResult, val carName: String?, val problem: String? = null, val target: SpeakerTarget? = null) : Step
+        class Result(val fit: FitResult, val carName: String?, val problem: String? = null, val target: SpeakerTarget? = null,
+                     /** Null for headphones, and for a speaker where only one side made sound. */
+                     val stereo: StereoFit? = null) : Step
         /** The saved correction waits for [check] or [skipCheck]; [measuring] while the check sweep plays. */
-        class Verifying(val profile: CarProfile, val fit: FitResult, val measuring: Boolean = false) : Step
+        class Verifying(val profile: CarProfile, val fit: FitResult, val measuring: Boolean = false, val stereo: StereoFit? = null) : Step
         /** [partialCheck] when the check sweep compared fewer frequencies than the fit corrected. */
         class Done(val profile: CarProfile, val checkSkipped: Boolean = false, val partialCheck: Boolean = false) : Step
     }
@@ -108,9 +112,12 @@ class CalibrationWizard internal constructor(
             val take = withContext(Dispatchers.Default) {
                 if (endpoint != null && HeadphoneEndpoint.current(app)?.key != endpoint?.key)
                     return@withContext Take.Rejected(Take.Reason.CAPTURE, "Output changed. Restart calibration with the same playback output.")
-                val capture = attempt("Take") { recorder.capture(sweep.toPcm16()) { !isActive } }
-                    ?: return@withContext Take.Rejected(Take.Reason.CAPTURE, MIC_FAILED)
-                capture.problem?.let { Take.Rejected(Take.Reason.CAPTURE, it) } ?: analyzer.analyze(capture.recording)
+                val stereo = stereoSweep
+                val capture = attempt("Take") {
+                    if (stereo == null) recorder.capture(sweep.toPcm16()) { !isActive } else recorder.capture(stereo.pcm(), 2) { !isActive }
+                } ?: return@withContext Take.Rejected(Take.Reason.CAPTURE, MIC_FAILED)
+                capture.problem?.let { Take.Rejected(Take.Reason.CAPTURE, it) }
+                    ?: stereo?.analyze(analyzer, capture.recording) ?: analyzer.analyze(capture.recording)
             }
             when (take) {
                 is Take.Rejected -> {
@@ -133,32 +140,42 @@ class CalibrationWizard internal constructor(
         }
     }
 
-    /** Fits the measured spots to [targetDb]; the takes stay, so a new target needs no new sweep. */
-    private fun fitTakes(targetDb: DoubleArray): FitResult {
+    private class Fitted(val fit: FitResult, val stereo: StereoFit?)
+
+    /**
+     * Fits the measured spots to [targetDb]; the takes stay, so a new target needs no new sweep.
+     * Each side is fitted on its own too when every spot measured both.
+     */
+    private fun fitTakes(targetDb: DoubleArray): Fitted {
         val takes = measurements.takes
         val unprocessed = recorder.unprocessed
-        val curves = takes.map { it.responseDb }
-        return PeqFitter.fit(TakeAnalyzer.powerAverage(curves, spotWeights(takes.size, centreFirst = output != CalibrationOutput.HEADPHONE)),
+        val weights = spotWeights(takes.size, centreFirst = output != CalibrationOutput.HEADPHONE)
+        // Every side keeps the session's noise limits, so both sides correct the same range
+        val excluded = TakeAnalyzer.unreliableBands(takes)
+        fun fitCurves(curves: List<DoubleArray>) = PeqFitter.fit(TakeAnalyzer.powerAverage(curves, weights),
             maxOf(TakeAnalyzer.reliableFromHz(takes), if (output == CalibrationOutput.HEADPHONE) 100.0 else PeqFitter.MIN_HZ),
-            TakeAnalyzer.unreliableBands(takes), targetDb,
+            excluded, targetDb,
             toHz = if (unprocessed) PeqFitter.MAX_HZ else PeqFitter.VOICE_MIC_MAX_HZ,
             maxBoostDb = if (unprocessed) PeqFitter.MAX_BOOST_DB else 0.0,
             spreadDb = TakeAnalyzer.spreadDb(curves))
+        val sides = takes.map { it.sides }
+        val stereo = if (stereoSweep == null || null in sides) null else StereoFit.of(sides.filterNotNull(), weights, excluded, ::fitCurves)
+        return Fitted(fitCurves(takes.map { it.responseDb }), stereo)
     }
 
     private suspend fun fit() {
         current.value = Step.Fitting
         val target = if (output == CalibrationOutput.HEADPHONE) null else SpeakerTarget.CAR
-        val fit = attempt("Fit") {
+        val fitted = attempt("Fit") {
             withContext(Dispatchers.Default) { fitTakes(target?.curve ?: requireNotNull(rigTarget).curve) }
         }
-        if (fit == null) {
+        if (fitted == null) {
             // The five takes stay; measuring the last spot again fits them once more
             current.value = Step.Position(POSITIONS.lastIndex, problem = FIT_FAILED)
             return
         }
         identity = attempt("Speaker name") { CarRoute.identity(app) }
-        current.value = Step.Result(fit, endpoint?.name ?: identity?.name, target = target)
+        current.value = Step.Result(fitted.fit, endpoint?.name ?: identity?.name, target = target, stereo = fitted.stereo)
     }
 
     private var refit: Job? = null
@@ -171,8 +188,10 @@ class CalibrationWizard internal constructor(
         refit?.cancel()
         if (result.target == target) return
         refit = scope.launch {
-            val fit = attempt("Refit") { withContext(Dispatchers.Default) { fitTakes(target.curve) } }
-            if (!saving && current.value === result) current.value = Step.Result(fit ?: result.fit, result.carName, if (fit == null) REFIT_FAILED else null, if (fit == null) result.target else target)
+            val fitted = attempt("Refit") { withContext(Dispatchers.Default) { fitTakes(target.curve) } }
+            if (!saving && current.value === result) current.value =
+                if (fitted == null) Step.Result(result.fit, result.carName, REFIT_FAILED, result.target, result.stereo)
+                else Step.Result(fitted.fit, result.carName, null, target, fitted.stereo)
         }
     }
 
@@ -201,7 +220,8 @@ class CalibrationWizard internal constructor(
                 micSource = recorder.micSource,
                 approximate = !recorder.unprocessed,
                 excludedBandsHz = fit.excludedBandsHz,
-                targetId = (result.target ?: SpeakerTarget.CAR).id
+                targetId = (result.target ?: SpeakerTarget.CAR).id,
+                stereo = result.stereo?.correction
             )
             val store by lazy { CarDspPreferences.profiles(app) }
             val saved = attempt("Save") {
@@ -231,11 +251,11 @@ class CalibrationWizard internal constructor(
                 }
             }
             if (saved == null) {
-                current.value = Step.Result(fit, result.carName, SAVE_FAILED, result.target)
+                current.value = Step.Result(fit, result.carName, SAVE_FAILED, result.target, result.stereo)
                 saving = false
                 return@launch
             }
-            current.value = Step.Verifying(profile, fit)
+            current.value = Step.Verifying(profile, fit, stereo = result.stereo)
         }
     }
 
@@ -244,7 +264,7 @@ class CalibrationWizard internal constructor(
     fun check() {
         val waiting = current.value as? Step.Verifying ?: return
         if (waiting.measuring) return
-        current.value = Step.Verifying(waiting.profile, waiting.fit, measuring = true)
+        current.value = Step.Verifying(waiting.profile, waiting.fit, measuring = true, stereo = waiting.stereo)
         val fit = waiting.fit
         // The centre spot for a speaker; a headphone fixture is still on its last seating
         val original = if (output == CalibrationOutput.HEADPHONE) measurements.takes.last() else measurements.takes.first()
@@ -253,6 +273,9 @@ class CalibrationWizard internal constructor(
             val verdict = attempt("Check sweep") {
                 withContext(Dispatchers.Default) {
                     if (endpoint != null && HeadphoneEndpoint.current(app)?.key != endpoint?.key) return@withContext null
+                    val stereo = waiting.stereo
+                    val sides = original.sides
+                    if (stereo != null && sides != null) return@withContext checkSides(stereo, fit, sides) { !isActive }
                     val chain = DspChain(fit.bands, sweep.sampleRate, 1)
                     val frame = DoubleArray(1)
                     val corrected = DoubleArray(sweep.length) {
@@ -269,6 +292,18 @@ class CalibrationWizard internal constructor(
             if (output == CalibrationOutput.SPEAKER) attempt("Saving the check") { withContext(Dispatchers.IO) { CarDspPreferences.profiles(app).save(checked) } }
             finish(checked, checkSkipped = false, partialCheck = verdict?.partial == true)
         }
+    }
+
+    /** Plays both sides through the chain playback uses for two-channel tracks, delay and balance included. */
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    private fun checkSides(stereo: StereoFit, fit: FitResult, original: Sides, cancelled: () -> Boolean): Verdict? {
+        val chain = DspChain.of(stereo.correction.settings(fit.bands), sweep.sampleRate, 2)
+        val capture = recorder.capture(requireNotNull(stereoSweep).pcm { chain.process(it) }, 2, cancelled)
+        if (capture.problem != null) return null
+        val corrected = (requireNotNull(stereoSweep).analyze(analyzer, capture.recording) as? Take.Accepted)?.sides ?: return null
+        val gapMs = (corrected.right.arrivalSeconds - corrected.left.arrivalSeconds) * 1_000
+        Log.i(TAG, "check: right side arrives %.2f ms after the left".format(gapMs))
+        return stereo.verify(original, corrected)
     }
 
     /** Leaves the saved correction "Not checked". */
