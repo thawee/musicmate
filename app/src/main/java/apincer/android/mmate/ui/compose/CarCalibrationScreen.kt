@@ -152,15 +152,19 @@ fun CarCalibrationScreen(
                         }) { Text(if (fixtureConfirmed) "✓ Fixture and matching target confirmed" else "Confirm fixture and matching target") }
                     } else Checklist(unprocessedMic)
                     if (microphones.isNotEmpty()) {
+                        Spacer(Modifier.height(16.dp))
                         Heading("Measurement microphone")
+                        // Until one is chosen, the first built-in mic records
+                        val recording = selectedMic ?: microphones.firstOrNull { it.builtIn }?.id
                         microphones.forEach { mic ->
                             TextButton(onClick = { selectedMic = mic.id; onMicrophone(mic.id) }) {
-                                Text((if (selectedMic == mic.id) "✓ " else "") + mic.name)
+                                Text((if (recording == mic.id) "✓ " else "") + mic.name)
                             }
                         }
                         Small("Keep the same microphone connected for every take and the check sweep.")
                     }
                     if (!headphone && micCalibrationAvailable) {
+                        Spacer(Modifier.height(16.dp))
                         Heading("Microphone calibration")
                         if (micCalibrationName == null) {
                             Small("A measurement microphone comes with a calibration file. Import it so the correction leaves the microphone's own response out. For a microphone pointing at the roof, use its 90 degree file.")
@@ -387,7 +391,7 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headph
                    target: SpeakerTarget? = null, onTarget: (SpeakerTarget) -> Unit = {}, stereo: StereoFit? = null,
                    onName: (String) -> Unit) {
     Title(if (headphone) "Your headphones, corrected" else "Your speaker, corrected")
-    Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f Hz to %.0f kHz.".format(fit.fromHz, fit.toHz / 1_000))
+    Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f\u00A0Hz to %.0f\u00A0kHz.".format(fit.fromHz, fit.toHz / 1_000))
     if (target != null) {
         Spacer(Modifier.height(16.dp))
         Heading("Aim for")
@@ -431,7 +435,7 @@ private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headph
     }
     if (!unprocessedMic) {
         Spacer(Modifier.height(12.dp))
-        Notice("Approximate: measured through the phone's voice microphone, so the correction only cuts and stops at %.0f kHz.".format(fit.toHz / 1_000))
+        Notice("Approximate: measured through the phone's voice microphone, so the correction only cuts and stops at %.0f\u00A0kHz.".format(fit.toHz / 1_000))
     }
     Spacer(Modifier.height(20.dp))
     OutlinedTextField(
