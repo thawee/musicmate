@@ -20,8 +20,8 @@ class StereoFit(val left: FitResult, val right: FitResult, val correction: Stere
         const val MAX_DELAY_MS = 6.0
 
         /**
-         * Fits each side's spots with [fit], levels the louder side down to the quieter one, and
-         * delays the side heard first at the centre spot, which is [spots]' first.
+         * Fits each side's spots with [fit], levels the louder side down to the quieter one as each
+         * side's own EQ leaves it, and delays the side heard first at the centre spot, which is [spots]' first.
          */
         fun of(spots: List<Sides>, weights: List<Double>, excludedBandsHz: List<Double>, fit: (List<DoubleArray>) -> FitResult): StereoFit {
             val left = spots.map { it.left.responseDb }
@@ -29,8 +29,10 @@ class StereoFit(val left: FitResult, val right: FitResult, val correction: Stere
             val (leftDelay, rightDelay) = delaysMs(spots.first())
             val leftFit = fit(left)
             val rightFit = fit(right)
+            fun corrected(curves: List<DoubleArray>, fit: FitResult) =
+                TakeAnalyzer.powerAverage(curves, weights).also { db -> PeqFitter.response(fit.bands).forEachIndexed { g, eq -> db[g] += eq } }
             return StereoFit(leftFit, rightFit, StereoCorrection(leftFit.bands, rightFit.bands, leftDelay, rightDelay,
-                balanceDb(TakeAnalyzer.powerAverage(left, weights), TakeAnalyzer.powerAverage(right, weights), excludedBandsHz)))
+                balanceDb(corrected(left, leftFit), corrected(right, rightFit), excludedBandsHz)))
         }
 
         /** Positive when the left side is louder; the chain then attenuates the left. */

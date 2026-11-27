@@ -102,5 +102,25 @@ class StereoSweepTest {
         assertEquals(-StereoFit.MAX_BALANCE_DB, StereoFit.balanceDb(right, DoubleArray(grid.size) { 9.0 }), 1e-9)
     }
 
+    @Test
+    fun bothSidesPlayEquallyLoudAfterTheirOwnCorrection() {
+        val grid = FrequencyGrid.HZ
+        // A broad mid bump on the left that its own EQ cuts, so the level before EQ overstates the gap
+        val bump = PeqFitter.response(listOf(apincer.android.mmate.audio.dsp.PeqBand(apincer.android.mmate.audio.dsp.PeqBand.Type.PEAK, 600.0, 6.0, 1.0)))
+        val left = DoubleArray(grid.size) { 2.0 + bump[it] }
+        val right = DoubleArray(grid.size)
+        fun take(db: DoubleArray) = Take.Accepted(db, DoubleArray(grid.size), 0.01)
+        val spots = List(5) { Sides(take(left), take(right)) }
+        val fit = StereoFit.of(spots, CalibrationWizard.spotWeights(5, centreFirst = true), emptyList()) { curves ->
+            PeqFitter.fit(TakeAnalyzer.powerAverage(curves, CalibrationWizard.spotWeights(5, centreFirst = true)), targetDb = DoubleArray(grid.size))
+        }
+        assertTrue("left cut ${PeqFitter.response(fit.left.bands).min()} dB", PeqFitter.response(fit.left.bands).min() < -4.0)
+        // What the chain plays: each side's EQ, then the louder side turned down by the balance
+        val balance = fit.correction.balanceDb
+        val playedLeft = DoubleArray(grid.size) { left[it] + PeqFitter.response(fit.left.bands)[it] - balance.coerceAtLeast(0.0) }
+        val playedRight = DoubleArray(grid.size) { right[it] + PeqFitter.response(fit.right.bands)[it] + balance.coerceAtMost(0.0) }
+        assertEquals(0.0, StereoFit.balanceDb(playedLeft, playedRight), 0.05)
+    }
+
     private fun <T : Any> assertNotNullAndGet(value: T?): T { assertNotNull(value); return value!! }
 }
