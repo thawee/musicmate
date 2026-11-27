@@ -397,6 +397,12 @@ public class AndroidPlayerController {
         }
     }
 
+    /** The item for a track; when the media session loads it into the player, it replaces any preloaded gapless follower. */
+    public MediaItem mediaItemFor(Track track, boolean loadsIntoPlayer) {
+        if (loadsIntoPlayer) this.nextTrack = null;
+        return buildMediaItem(track);
+    }
+
     public void play(Track song) {
         if (song == null || song.getPath() == null) return;
         this.nextTrack = null;

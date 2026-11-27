@@ -98,6 +98,15 @@
             </intent-filter>
         </service>
 
+        <!-- Restarts the playback service when a car or headset presses play after Android stopped it -->
+        <receiver
+            android:name="androidx.media3.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
 
         <!-- Main activity for music browsing on phone -->
         <activity

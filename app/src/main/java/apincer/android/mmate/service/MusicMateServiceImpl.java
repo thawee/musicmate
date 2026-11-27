@@ -27,6 +27,9 @@ import androidx.core.app.NotificationCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -434,6 +437,12 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                     return new MediaSession.ConnectionResult.AcceptedResultBuilder(session, controller)
                             .setAvailablePlayerCommands(commands).build();
                 }
+
+                @Override
+                public ListenableFuture<MediaSession.MediaItemsWithStartPosition> onPlaybackResumption(
+                        MediaSession session, MediaSession.ControllerInfo controller, boolean isForPlayback) {
+                    return resumeFromQueue(isForPlayback);
+                }
             })
                 .build();
                 
@@ -535,6 +544,9 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
                 case MediaServerManager.ACTION_STOP_SERVER:
                     stopServers();
                     break;
+                default:
+                    // Media buttons forwarded by MediaButtonReceiver reach the session here
+                    return super.onStartCommand(intent, flags, startId);
             }
         }
         return START_STICKY;
@@ -690,6 +702,21 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
     }
 
     private void playSong(Track song, boolean newInstance) {
+        startSong(song, newInstance);
+        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
+            if (isControllable(playbackTarget)) {
+                internalPlayOnDMRPlayer(playbackTarget, song);
+            } else {
+                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
+                    queueManager.setPlaybackTrack(song);
+                }
+                androidPlayer.play(song);
+                publishLocalSong(song);
+            }
+        });
+    }
+
+    private void startSong(Track song, boolean newInstance) {
         pendingResume = null;
         if (song != null && newInstance) historyTracker.end(true);
         if (song != null) {
@@ -699,23 +726,41 @@ public class MusicMateServiceImpl extends MediaLibraryService implements Playbac
             queueManager.setCurrentTrack(song);
             AudioStreamCacheManager.getInstance().preloadTrack(song);
         }
-        currentPlayerFlow.getValue().ifPresent(playbackTarget -> {
-            if (isControllable(playbackTarget)) {
-                internalPlayOnDMRPlayer(playbackTarget, song);
-            } else {
-                if (ExternalAndroidPlayer.LOCAL_TARGET_ID.equals(playbackTarget.getTargetId())) {
-                    queueManager.setPlaybackTrack(song);
-                }
-                androidPlayer.play(song);
-                currentTrackFlow.setValue(Optional.ofNullable(song));
-                if (song != null) {
-                    apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
-                    state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
-                    state.currentTrack = song;
-                    playbackStateFlow.setValue(state);
-                }
+    }
+
+    private void publishLocalSong(Track song) {
+        currentTrackFlow.setValue(Optional.ofNullable(song));
+        if (song != null) {
+            apincer.music.core.playback.PlaybackState state = new apincer.music.core.playback.PlaybackState();
+            state.currentState = apincer.music.core.playback.PlaybackState.State.PLAYING;
+            state.currentTrack = song;
+            playbackStateFlow.setValue(state);
+        }
+    }
+
+    /**
+     * Play from a car or headset when nothing is loaded, typically after Android stopped the idle
+     * service. Local playback resumes the now-playing track, else the saved queue's current one;
+     * the session then loads the returned item into ExoPlayer and plays it.
+     */
+    private ListenableFuture<MediaSession.MediaItemsWithStartPosition> resumeFromQueue(boolean isForPlayback) {
+        SettableFuture<MediaSession.MediaItemsWithStartPosition> result = SettableFuture.create();
+        queueManager.whenLoaded(() -> androidx.core.content.ContextCompat.getMainExecutor(this).execute(() -> {
+            Track track = getNowPlayingSong();
+            if (track == null) track = queueManager.getCurrentTrack();
+            if (track == null || track.getPath() == null || !isLocalTarget()) {
+                result.setException(new IllegalStateException("Nothing to resume on local playback"));
+                return;
             }
-        });
+            if (isForPlayback) {
+                startSong(track, true);
+                queueManager.setPlaybackTrack(track);
+                publishLocalSong(track);
+            }
+            result.set(new MediaSession.MediaItemsWithStartPosition(
+                    List.of(androidPlayer.mediaItemFor(track, isForPlayback)), 0, androidx.media3.common.C.TIME_UNSET));
+        }));
+        return result;
     }
 
     @Override

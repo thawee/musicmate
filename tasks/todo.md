@@ -1672,3 +1672,13 @@ Publication verified: release commit ea28ff18dc87d7b1e86afaa6779dc4c7228220a7 an
 - [x] Verify GitHub workflow publication, downloaded APK signature and manifest.
 - Validation: optimized release build passed as 3.36.0-261126 (165); APK manifest confirms all-files access and local playback service retained, notification listener/accessibility binding/SMS absent. Prior source validation: 449 app unit tests and 18 emulator tests passed. Evidence: `out/validation/release-3.36.0/` and `out/validation/poweramp-intent-detection/`.
 - Publication verified: release commit `c9cde9fcab56aed1d16b1076c4dab3cf62b6a364` and annotated `v3.36.0` pushed atomically to origin/play-storage; remote tag resolves to that commit. GitHub Actions run `45770359911` completed successfully. Public release: https://github.com/thawee/musicmate/releases/tag/v3.36.0. Downloaded APK (48,299,996 bytes) passed apksigner verification with the same certificate as 3.35.0: SHA-256 `b5757a1ecce6cf1a5a9476c97432640764025f3c352d88824b268674ca1d29ee`. Published manifest confirms version 3.36.0-261126 / 165, storage access and playback retained, notification listener absent. Evidence saved under release validation directory. Installed Poweramp interoperability remains a physical-device check; Play Protect acceptance depends on Google assessment.
+
+## Car and Bluetooth controls lost in 3.36.0 (2026-11-27)
+Cause: the deleted notification listener was bound by Android, which kept MusicMate counted as a foreground app, so the playback service and its media session never stopped. Now Android stops the idle service, and with no MediaButtonReceiver or onPlaybackResumption a car or headset "play" has no session to reach.
+- [x] 1. Declare Media3 `MediaButtonReceiver` in the manifest so a media button can restart the service.
+- [x] 2. Pass media-button intents to `super.onStartCommand` so the session receives them.
+- [x] 3. Implement `onPlaybackResumption`: on local playback, resume the now-playing or current queue track through MusicMate's own bookkeeping.
+- [x] 4. Build, run unit tests, and prove on the emulator: kill the idle service, dispatch play, check the session plays.
+  Done on Medium_Phone (API 36): after killing the paused app, `cmd media_session dispatch play` restarted it and played Adagio Cantabile; next moved to Afterglow through the queue, pause worked, and Now Playing showed Afterglow. 449 unit tests pass.
+- [ ] (waiting on user: install on the phone and test Bluetooth and Android Auto play/pause/next after the app sits idle)
+
