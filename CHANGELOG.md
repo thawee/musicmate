@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
 
+## [3.37.1] - 2026-11-27
+
+### Fixed
+- **Output and MateTune tiles on narrow phones:** When the two tiles stack, each shows its title and one line, and they stay on screen while the artwork above gives way and scrolls. MateTune was pushed below the playback controls, especially with a larger font.
+
 ## [3.37.0] - 2026-11-27
 
 ### Added
