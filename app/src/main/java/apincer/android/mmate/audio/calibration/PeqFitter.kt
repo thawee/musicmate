@@ -77,26 +77,40 @@ object PeqFitter {
     private const val OUT_OF_RANGE_WEIGHT = 2.0
     /** A band that does not cut the weighted error by at least 1% is dropped. */
     private const val MIN_IMPROVEMENT = 0.99
+    /**
+     * Full boost while the spots agree within [SPREAD_FULL_BOOST_DB] (standard deviation), none
+     * past [SPREAD_NO_BOOST_DB], linear between. Judgement values, not measured thresholds.
+     */
+    const val SPREAD_FULL_BOOST_DB = 1.5
+    const val SPREAD_NO_BOOST_DB = 3.0
+
+    fun spreadScale(spreadDb: Double): Double =
+        ((SPREAD_NO_BOOST_DB - spreadDb) / (SPREAD_NO_BOOST_DB - SPREAD_FULL_BOOST_DB)).coerceIn(0.0, 1.0)
 
     private val grid = FrequencyGrid.HZ
 
     /**
      * [fromHz] comes from [TakeAnalyzer.reliableFromHz]; nothing below it or above [toHz] is
-     * corrected. [maxBoostDb] 0 fits cuts only.
+     * corrected. [maxBoostDb] 0 fits cuts only. [spreadDb], from [TakeAnalyzer.spreadDb], lowers the
+     * boost where the measured spots disagree: a dip that moves when you lean is a reflection,
+     * and filling it is louder a few centimetres away.
      */
     @JvmStatic
     @JvmOverloads
     fun fit(measuredDb: DoubleArray, fromHz: Double = MIN_HZ, excludedBandsHz: List<Double> = emptyList(), targetDb: DoubleArray = CarTarget.CURVE,
-            toHz: Double = MAX_HZ, maxBoostDb: Double = MAX_BOOST_DB): FitResult {
+            toHz: Double = MAX_HZ, maxBoostDb: Double = MAX_BOOST_DB, spreadDb: DoubleArray? = null): FitResult {
         require(measuredDb.size == grid.size && measuredDb.all { it.isFinite() })
         require(targetDb.size == grid.size && targetDb.all { it.isFinite() })
+        require(spreadDb == null || spreadDb.size == grid.size)
         val excluded = BooleanArray(grid.size) { isExcluded(grid[it], excludedBandsHz) }
         val inRange = BooleanArray(grid.size) { grid[it] in maxOf(MIN_HZ, fromHz)..toHz && !excluded[it] }
         val target = targetDb.copyOf()
         val measured = align(measuredDb, target, excludedBandsHz, toHz)
         // Mask before null detection as well as fitting: contaminated depths convey no information.
         val error = DoubleArray(grid.size) { if (excluded[it]) 0.0 else target[it] - measured[it] }
-        val boostCap = boostCaps(error, maxBoostDb)
+        // Only where the takes are trusted: in noise or below fromHz the spread measures noise, not position.
+        val boostScale = DoubleArray(grid.size) { if (inRange[it] && spreadDb != null) spreadScale(spreadDb[it]) else 1.0 }
+        val boostCap = boostCaps(error, maxBoostDb, boostScale)
         val wanted = DoubleArray(grid.size) { if (inRange[it]) error[it].coerceIn(MAX_CUT_DB, boostCap[it]) else 0.0 }
         val weight = DoubleArray(grid.size) { if (inRange[it]) 1.0 else if (excluded[it]) EXCLUDED_WEIGHT else OUT_OF_RANGE_WEIGHT }
 
@@ -124,7 +138,7 @@ object PeqFitter {
                 skipped[worst] = true
             }
         }
-        enforceLimits(bands, excludedBandsHz, maxBoostDb)
+        enforceLimits(bands, excludedBandsHz, maxBoostDb, boostScale)
 
         val correction = response(bands)
         return FitResult(
@@ -215,9 +229,9 @@ object PeqFitter {
         else -> maxBoostDb
     }
 
-    /** [boostCap], and 0 in a narrow deep null (with a small margin). */
-    private fun boostCaps(error: DoubleArray, maxBoostDb: Double): DoubleArray {
-        val caps = DoubleArray(grid.size) { boostCap(grid[it], maxBoostDb) }
+    /** [boostCap] scaled by [spreadScale], and 0 in a narrow deep null (with a small margin). */
+    private fun boostCaps(error: DoubleArray, maxBoostDb: Double, boostScale: DoubleArray): DoubleArray {
+        val caps = DoubleArray(grid.size) { boostCap(grid[it], maxBoostDb) * boostScale[it] }
         var g = 0
         while (g < grid.size) {
             if (error[g] <= NULL_DEPTH_DB) {
@@ -271,13 +285,19 @@ object PeqFitter {
         }
     }
 
-    /** Enforces boost caps and protected-band limits on combined tails, including mask edges. */
-    private fun enforceLimits(bands: MutableList<PeqBand>, excludedBandsHz: List<Double>, maxBoostDb: Double) {
+    /**
+     * Enforces boost caps and protected-band limits on combined tails, including mask edges. On the
+     * grid the cap is scaled by [boostScale], so neighbouring bands cannot sum past it between them.
+     */
+    private fun enforceLimits(bands: MutableList<PeqBand>, excludedBandsHz: List<Double>, maxBoostDb: Double, boostScale: DoubleArray) {
         val frequencies = grid.toList() + excludedBandsHz.flatMap { centre ->
             // Finer than the measurement grid, with exact protected-region boundaries.
             (-48..48).map { centre * 2.0.pow(it / 192.0) }
         }
         val excluded = BooleanArray(frequencies.size) { isExcluded(frequencies[it], excludedBandsHz) }
+        val caps = DoubleArray(frequencies.size) {
+            boostCap(frequencies[it], maxBoostDb) * if (it < grid.size) boostScale[it] else 1.0
+        }
         repeat(if (excludedBandsHz.isEmpty()) 200 else 400) {
             val filters = bands.map { Biquad.design(it, SAMPLE_RATE) }
             val contributions = filters.map { filter -> DoubleArray(frequencies.size) { filter.magnitudeDb(frequencies[it], SAMPLE_RATE) } }
@@ -286,7 +306,7 @@ object PeqFitter {
             var excess = 0.0
             var direction = 1.0
             for (g in frequencies.indices) {
-                val overBoost = combined[g] - boostCap(frequencies[g], maxBoostDb)
+                val overBoost = combined[g] - caps[g]
                 val overProtected = if (excluded[g]) abs(combined[g]) - 0.98 else 0.0
                 val over = max(overBoost, overProtected)
                 if (over > excess + 1e-3) {

@@ -135,11 +135,13 @@ class CalibrationWizard internal constructor(
             withContext(Dispatchers.Default) {
                 val takes = measurements.takes
                 val unprocessed = recorder.unprocessed
-                PeqFitter.fit(TakeAnalyzer.powerAverage(takes.map { it.responseDb }),
+                val curves = takes.map { it.responseDb }
+                PeqFitter.fit(TakeAnalyzer.powerAverage(curves, spotWeights(takes.size, centreFirst = output != CalibrationOutput.HEADPHONE)),
                     maxOf(TakeAnalyzer.reliableFromHz(takes), if (output == CalibrationOutput.HEADPHONE) 100.0 else PeqFitter.MIN_HZ),
                     TakeAnalyzer.unreliableBands(takes), if (output == CalibrationOutput.HEADPHONE) requireNotNull(rigTarget).curve else CarTarget.CURVE,
                     toHz = if (unprocessed) PeqFitter.MAX_HZ else PeqFitter.VOICE_MIC_MAX_HZ,
-                    maxBoostDb = if (unprocessed) PeqFitter.MAX_BOOST_DB else 0.0)
+                    maxBoostDb = if (unprocessed) PeqFitter.MAX_BOOST_DB else 0.0,
+                    spreadDb = TakeAnalyzer.spreadDb(curves))
             }
         }
         if (fit == null) {
@@ -268,6 +270,17 @@ class CalibrationWizard internal constructor(
     companion object {
         /** Around the listener's head at ear height, about 15 cm apart. */
         val POSITIONS = listOf("Centre", "Left", "Right", "Forward", "Back")
+
+        /** Share of the average the centre spot carries; the rest is split evenly. */
+        const val CENTRE_WEIGHT = 0.5
+
+        /**
+         * The centre is where the head is, so it counts for [CENTRE_WEIGHT]; the other spots only
+         * smooth out reflections. Headphone seatings are all equally likely, so they count equally.
+         */
+        fun spotWeights(count: Int, centreFirst: Boolean): List<Double> =
+            if (!centreFirst || count < 2) List(count) { 1.0 / count }
+            else List(count) { if (it == 0) CENTRE_WEIGHT else (1 - CENTRE_WEIGHT) / (count - 1) }
         private const val TAG = "CarCalibration"
         private const val MIC_FAILED = "The microphone could not record. Close apps that may be using it, such as a call or voice assistant, and measure again."
         private const val FIT_FAILED = "The correction could not be worked out from these measurements. Measure this spot again."

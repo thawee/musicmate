@@ -281,10 +281,34 @@ class TakeAnalyzer(private val deconvolver: Deconvolver) {
             }
         }
 
-        /** Average of several takes in power, so one position's null does not dominate. */
+        /** Average of several takes in power, so one position's null does not dominate. [weights] sum to 1. */
         @JvmStatic
-        fun powerAverage(curves: List<DoubleArray>): DoubleArray = DoubleArray(FrequencyGrid.HZ.size) { g ->
-            10 * log10(curves.sumOf { 10.0.pow(it[g] / 10) } / curves.size)
+        @JvmOverloads
+        fun powerAverage(curves: List<DoubleArray>, weights: List<Double> = List(curves.size) { 1.0 / curves.size }): DoubleArray {
+            require(weights.size == curves.size && abs(weights.sum() - 1) < 1e-9) { "${weights.size} weights summing to ${weights.sum()} for ${curves.size} curves" }
+            return DoubleArray(FrequencyGrid.HZ.size) { g -> 10 * log10(curves.indices.sumOf { weights[it] * 10.0.pow(curves[it][g] / 10) }) }
         }
+
+        /**
+         * How much the takes disagree at each frequency: the standard deviation of their dB values,
+         * after removing each take's own level offset over the midrange (a spot 15 cm closer reads
+         * louder everywhere, which is not disagreement).
+         */
+        @JvmStatic
+        fun spreadDb(curves: List<DoubleArray>): DoubleArray {
+            val grid = FrequencyGrid.HZ
+            val mean = DoubleArray(grid.size) { g -> curves.sumOf { it[g] } / curves.size }
+            val midrange = grid.indices.filter { grid[it] in SPREAD_ALIGN_HZ }
+            val levelled = curves.map { curve ->
+                val offset = midrange.map { curve[it] - mean[it] }.sorted().let { it[it.size / 2] }
+                DoubleArray(grid.size) { curve[it] - offset }
+            }
+            return DoubleArray(grid.size) { g ->
+                val m = levelled.sumOf { it[g] } / levelled.size
+                sqrt(levelled.sumOf { (it[g] - m).pow(2) } / levelled.size)
+            }
+        }
+
+        private val SPREAD_ALIGN_HZ = 200.0..4_000.0
     }
 }

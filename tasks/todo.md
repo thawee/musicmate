@@ -1707,3 +1707,17 @@ Review findings are in the 2026-11-27 session reply; items 1 to 3 are playback, 
 - [ ] (waiting on user: tune one speaker on the phone through to the check step) No real sweep has run, because the emulator blocks the mic.
 - [ ] (waiting on user: play a gapless album with EQ on through headphones or USB) Listen for clicks at track changes.
 - [ ] Commit and PR: skip until the user asks.
+
+## MateTune features (2026-11-27)
+
+The user chose to build all five open items, in this order, each in its own commit and checked by the reviewer agent.
+
+- [x] 1. Spot weighting: the centre take counts for half the average, and the boost is reduced where the five spots disagree. The reduction applies only where the takes are trusted, not in noise bands or below the reliable range.
+- [ ] 2. Target presets: Car, Harman-style room and Flat, chosen at the result step and refitted with no new sweep.
+- Data shapes: CarProfile gains `targetId` (default "car") and, for item 5, per-channel bands and delay that load an old profile as identical channels. Bit-perfect bypasses the sink conversion and processor and passes the decoder format through.
+- [ ] 3. Bit-perfect USB: ask for bit-perfect mixer attributes on API 34+, with tuning, leveling and system volume off while it is active.
+- [ ] (waiting on user: play a 24-bit/96 kHz track in bit-perfect mode) The DAC should show 96 kHz, and the volume should be set on the DAC.
+- [ ] 4. Mic calibration files: import a frequency and dB file, and subtract it before fitting. The user has both mics, so record from a USB measurement mic when one is plugged in, and use a phone-mic calibration file otherwise. Get the user's real calibration file before writing the parser.
+- [ ] 5. Left and right measurement: sweep each channel, then fit a separate EQ and delay for each one in the DSP chain and the profile. Capture both sweeps in one stream, take arrival from the impulse onset, and rerun the gapless probe.
+- [ ] Each feature has tests, unit suites pass, and the advisor reviews the diff.
+- [ ] Commit each feature; push only when the user asks.
