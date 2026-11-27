@@ -118,6 +118,8 @@ android {
     testOptions {
         unitTests {
             includeAndroidResources = true
+            // Calibration tests analyse full 10 s sweeps; Gradle's 512 MB default runs out mid-suite
+            all { maxHeapSize = "1g" }
         }
     }
     experimentalProperties["android.experimental.enableScreenshotTest"] = true

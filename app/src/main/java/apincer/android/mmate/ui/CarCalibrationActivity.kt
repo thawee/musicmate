@@ -115,7 +115,8 @@ class CarCalibrationActivity : ComponentActivity() {
                     onFixtureConfirmed = { fixtureConfirmed = it },
                     onFixtureName = { fixtureName = it },
                     onCheck = { withMic { @Suppress("MissingPermission") wizard.check() } },
-                    onSkipCheck = wizard::skipCheck
+                    onSkipCheck = wizard::skipCheck,
+                    onTarget = wizard::chooseTarget
                 )
                 if (confirmingExit) {
                     StopCalibrationDialog(onStop = { finish() }, onDismiss = { confirmingExit = false })

@@ -66,6 +66,17 @@ class CarProfileStoreTest {
     }
 
     @Test
+    fun aProfileSavedBeforeTargetsCouldBeChosenAimedForTheCarCurve() {
+        val dir = folder.newFolder("car_profiles")
+        File(dir, "old.json").writeText("""{"id":"old","name":"MU-X","createdAtMillis":1,"bands":[],"fromHz":45.0,""" +
+            """"measuredDb":[],"targetDb":[],"predictedDb":[],"micSource":"UNPROCESSED","approximate":false}""")
+        val store = CarProfileStore(dir)
+        assertEquals(SpeakerTarget.CAR, SpeakerTarget.of(store.get("old")!!.targetId))
+        store.save(profile("room", 2).copy(targetId = SpeakerTarget.ROOM.id))
+        assertEquals(SpeakerTarget.ROOM, SpeakerTarget.of(store.get("room")!!.targetId))
+    }
+
+    @Test
     fun anUnreadableFileIsSkipped() {
         val dir = folder.newFolder("car_profiles")
         File(dir, "broken.json").writeText("{ not json")

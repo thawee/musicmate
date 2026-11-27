@@ -19,6 +19,12 @@ import apincer.android.mmate.audio.calibration.Take
 import apincer.android.mmate.audio.calibration.CarProfile
 import apincer.android.mmate.audio.calibration.CarTarget
 import apincer.android.mmate.audio.calibration.PeqFitter
+import apincer.android.mmate.audio.calibration.SpeakerTarget
+import apincer.android.mmate.audio.calibration.CalibrationOutput
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -48,6 +54,29 @@ class CalibrationNoiseUiTest {
         composeRule.onNodeWithText(problem).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Measure again").assertIsDisplayed().performClick()
         composeRule.runOnIdle { assertEquals(1, retries) }
+    }
+
+    @Test
+    fun aSpeakerResultOffersTargetsAndAHeadphoneResultDoesNot() {
+        val fit = PeqFitter.fit(CarTarget.CURVE)
+        var step by mutableStateOf<CalibrationWizard.Step>(CalibrationWizard.Step.Result(fit, "MU-X", target = SpeakerTarget.CAR))
+        var output by mutableStateOf(CalibrationOutput.SPEAKER)
+        var chosen: SpeakerTarget? = null
+        composeRule.setContent {
+            MusicMateTheme {
+                CarCalibrationScreen(step = step, unprocessedMic = true, onStart = {}, onMeasure = {}, onSave = {}, onClose = {},
+                    output = output, onTarget = { chosen = it })
+            }
+        }
+        composeRule.onNodeWithText("Car").assertIsSelected()
+        composeRule.onNodeWithText("Room").assertIsNotSelected().performClick()
+        composeRule.runOnIdle { assertEquals(SpeakerTarget.ROOM, chosen) }
+        step = CalibrationWizard.Step.Result(fit, "MU-X", target = SpeakerTarget.ROOM)
+        composeRule.onNodeWithText("Room").assertIsSelected()
+        composeRule.onNodeWithText("2013 listening-room study", substring = true).assertIsDisplayed()
+        step = CalibrationWizard.Step.Result(fit, null)
+        output = CalibrationOutput.HEADPHONE
+        composeRule.onAllNodesWithText("Aim for").assertCountEquals(0)
     }
 
     @Test

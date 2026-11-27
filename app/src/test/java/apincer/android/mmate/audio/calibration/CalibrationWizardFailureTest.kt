@@ -165,6 +165,36 @@ class CalibrationWizardFailureTest {
         assertTrue(saved.approximate)
     }
 
+    @Test
+    fun anotherTargetRefitsTheSameSpotsAndIsSaved() {
+        every { recorder.capture(any(), any()) } returns cleanCapture()
+        val wizard = wizard(temporary.root)
+        measureAllSpots(wizard)
+        val car = wizard.step.value as CalibrationWizard.Step.Result
+        assertEquals(SpeakerTarget.CAR, car.target)
+        wizard.chooseTarget(SpeakerTarget.FLAT)
+        val flat = await(wizard) { (it as? CalibrationWizard.Step.Result)?.target == SpeakerTarget.FLAT } as CalibrationWizard.Step.Result
+        assertTrue(flat.fit.targetDb.contentEquals(SpeakerTarget.FLAT.curve))
+        assertTrue(flat.fit.bands != car.fit.bands)
+        io.mockk.verify(exactly = CalibrationWizard.POSITIONS.size) { recorder.capture(any(), any()) }
+        wizard.save("Car")
+        await(wizard) { it is CalibrationWizard.Step.Verifying }
+        assertEquals(SpeakerTarget.FLAT.id, CarProfileStore(File(temporary.root, "car_profiles")).list().single().targetId)
+    }
+
+    @Test
+    fun tappingBackToTheShownTargetUndoesARefitStillRunning() {
+        every { recorder.capture(any(), any()) } returns cleanCapture()
+        val wizard = wizard(temporary.root)
+        measureAllSpots(wizard)
+        wizard.chooseTarget(SpeakerTarget.ROOM)
+        wizard.chooseTarget(SpeakerTarget.CAR)
+        Thread.sleep(1_000)
+        val result = wizard.step.value as CalibrationWizard.Step.Result
+        assertEquals(SpeakerTarget.CAR, result.target)
+        assertTrue(result.fit.targetDb.contentEquals(CarTarget.CURVE))
+    }
+
     private fun measureAllSpots(wizard: CalibrationWizard) {
         wizard.begin()
         for (index in CalibrationWizard.POSITIONS.indices) {

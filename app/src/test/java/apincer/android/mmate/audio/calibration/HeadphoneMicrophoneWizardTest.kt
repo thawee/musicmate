@@ -77,7 +77,9 @@ class HeadphoneMicrophoneWizardTest {
             await(wizard) { it is CalibrationWizard.Step.Position && !it.measuring && it.index == index }
             wizard.measure()
         }
-        await(wizard) { it is CalibrationWizard.Step.Result }
+        val result = await(wizard) { it is CalibrationWizard.Step.Result } as CalibrationWizard.Step.Result
+        assertEquals(null, result.target)
+        assertTrue(result.fit.targetDb.all { it == 0.0 })
         wizard.save("My rig")
         await(wizard) { it is CalibrationWizard.Step.Verifying && !it.measuring }
         wizard.check()

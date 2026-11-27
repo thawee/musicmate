@@ -32,7 +32,9 @@ data class CarProfile(
     /** [KIND_CAR] when tuned through Android Auto, [KIND_SPEAKER] through a Bluetooth speaker. */
     val kind: String? = null,
     /** Noisy 1/3-octave band centres, excluded from fitting and verification. */
-    val excludedBandsHz: List<Double> = emptyList()
+    val excludedBandsHz: List<Double> = emptyList(),
+    /** [SpeakerTarget.id] the fit aimed for; profiles saved before targets could be chosen aimed for the car curve. */
+    val targetId: String = SpeakerTarget.CAR.id
 ) {
     companion object {
         const val KIND_CAR = "car"

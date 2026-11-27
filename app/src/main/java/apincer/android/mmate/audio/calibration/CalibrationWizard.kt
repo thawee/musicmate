@@ -13,6 +13,7 @@ import apincer.android.mmate.audio.dsp.DspChain
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
@@ -60,8 +61,11 @@ class CalibrationWizard internal constructor(
         data object Checklist : Step
         data class Position(val index: Int, val measuring: Boolean = false, val problem: String? = null, val noisyBandsHz: List<Double> = emptyList()) : Step
         data object Fitting : Step
-        /** [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name; [problem] says why saving failed. */
-        class Result(val fit: FitResult, val carName: String?, val problem: String? = null) : Step
+        /**
+         * [carName] is the tuned car's or speaker's Bluetooth name, offered as the profile name; [problem] says why saving failed.
+         * [target] is what a speaker fit aimed for, null for headphones, which aim for the fixture's target.
+         */
+        class Result(val fit: FitResult, val carName: String?, val problem: String? = null, val target: SpeakerTarget? = null) : Step
         /** The saved correction waits for [check] or [skipCheck]; [measuring] while the check sweep plays. */
         class Verifying(val profile: CarProfile, val fit: FitResult, val measuring: Boolean = false) : Step
         /** [partialCheck] when the check sweep compared fewer frequencies than the fit corrected. */
@@ -129,20 +133,24 @@ class CalibrationWizard internal constructor(
         }
     }
 
+    /** Fits the measured spots to [targetDb]; the takes stay, so a new target needs no new sweep. */
+    private fun fitTakes(targetDb: DoubleArray): FitResult {
+        val takes = measurements.takes
+        val unprocessed = recorder.unprocessed
+        val curves = takes.map { it.responseDb }
+        return PeqFitter.fit(TakeAnalyzer.powerAverage(curves, spotWeights(takes.size, centreFirst = output != CalibrationOutput.HEADPHONE)),
+            maxOf(TakeAnalyzer.reliableFromHz(takes), if (output == CalibrationOutput.HEADPHONE) 100.0 else PeqFitter.MIN_HZ),
+            TakeAnalyzer.unreliableBands(takes), targetDb,
+            toHz = if (unprocessed) PeqFitter.MAX_HZ else PeqFitter.VOICE_MIC_MAX_HZ,
+            maxBoostDb = if (unprocessed) PeqFitter.MAX_BOOST_DB else 0.0,
+            spreadDb = TakeAnalyzer.spreadDb(curves))
+    }
+
     private suspend fun fit() {
         current.value = Step.Fitting
+        val target = if (output == CalibrationOutput.HEADPHONE) null else SpeakerTarget.CAR
         val fit = attempt("Fit") {
-            withContext(Dispatchers.Default) {
-                val takes = measurements.takes
-                val unprocessed = recorder.unprocessed
-                val curves = takes.map { it.responseDb }
-                PeqFitter.fit(TakeAnalyzer.powerAverage(curves, spotWeights(takes.size, centreFirst = output != CalibrationOutput.HEADPHONE)),
-                    maxOf(TakeAnalyzer.reliableFromHz(takes), if (output == CalibrationOutput.HEADPHONE) 100.0 else PeqFitter.MIN_HZ),
-                    TakeAnalyzer.unreliableBands(takes), if (output == CalibrationOutput.HEADPHONE) requireNotNull(rigTarget).curve else CarTarget.CURVE,
-                    toHz = if (unprocessed) PeqFitter.MAX_HZ else PeqFitter.VOICE_MIC_MAX_HZ,
-                    maxBoostDb = if (unprocessed) PeqFitter.MAX_BOOST_DB else 0.0,
-                    spreadDb = TakeAnalyzer.spreadDb(curves))
-            }
+            withContext(Dispatchers.Default) { fitTakes(target?.curve ?: requireNotNull(rigTarget).curve) }
         }
         if (fit == null) {
             // The five takes stay; measuring the last spot again fits them once more
@@ -150,7 +158,22 @@ class CalibrationWizard internal constructor(
             return
         }
         identity = attempt("Speaker name") { CarRoute.identity(app) }
-        current.value = Step.Result(fit, endpoint?.name ?: identity?.name)
+        current.value = Step.Result(fit, endpoint?.name ?: identity?.name, target = target)
+    }
+
+    private var refit: Job? = null
+
+    /** Refits the same takes for [target], replacing a refit still running. Speakers only. */
+    fun chooseTarget(target: SpeakerTarget) {
+        val result = current.value as? Step.Result ?: return
+        if (saving || result.target == null) return
+        // Cancel first: tapping back to the shown target must also undo a refit still running
+        refit?.cancel()
+        if (result.target == target) return
+        refit = scope.launch {
+            val fit = attempt("Refit") { withContext(Dispatchers.Default) { fitTakes(target.curve) } }
+            if (!saving && current.value === result) current.value = Step.Result(fit ?: result.fit, result.carName, if (fit == null) REFIT_FAILED else null, if (fit == null) result.target else target)
+        }
     }
 
     /** Saves the profile and makes it the active correction; the check sweep waits for [check]. */
@@ -158,6 +181,7 @@ class CalibrationWizard internal constructor(
         val result = current.value as? Step.Result ?: return
         if (saving) return
         saving = true
+        refit?.cancel()
         scope.launch {
             val car = identity
             val fit = result.fit
@@ -176,7 +200,8 @@ class CalibrationWizard internal constructor(
                 predictedDb = fit.predictedDb.toList(),
                 micSource = recorder.micSource,
                 approximate = !recorder.unprocessed,
-                excludedBandsHz = fit.excludedBandsHz
+                excludedBandsHz = fit.excludedBandsHz,
+                targetId = (result.target ?: SpeakerTarget.CAR).id
             )
             val store by lazy { CarDspPreferences.profiles(app) }
             val saved = attempt("Save") {
@@ -206,7 +231,7 @@ class CalibrationWizard internal constructor(
                 }
             }
             if (saved == null) {
-                current.value = Step.Result(fit, result.carName, SAVE_FAILED)
+                current.value = Step.Result(fit, result.carName, SAVE_FAILED, result.target)
                 saving = false
                 return@launch
             }
@@ -284,6 +309,7 @@ class CalibrationWizard internal constructor(
         private const val TAG = "CarCalibration"
         private const val MIC_FAILED = "The microphone could not record. Close apps that may be using it, such as a call or voice assistant, and measure again."
         private const val FIT_FAILED = "The correction could not be worked out from these measurements. Measure this spot again."
+        private const val REFIT_FAILED = "That target could not be fitted to these measurements, so the previous correction is kept."
         private const val SAVE_FAILED = "The correction could not be saved. Check that the phone has free storage, then save again."
     }
 }

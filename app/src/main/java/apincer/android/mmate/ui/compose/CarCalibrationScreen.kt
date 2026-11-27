@@ -28,6 +28,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -65,6 +66,7 @@ import apincer.android.mmate.audio.calibration.CalibrationWizard
 import apincer.android.mmate.audio.calibration.FitResult
 import apincer.android.mmate.audio.calibration.FrequencyGrid
 import apincer.android.mmate.audio.calibration.PeqFitter
+import apincer.android.mmate.audio.calibration.SpeakerTarget
 import apincer.android.mmate.audio.calibration.SweepRecorder
 import kotlin.math.ln
 
@@ -91,7 +93,8 @@ fun CarCalibrationScreen(
     onFixtureConfirmed: (Boolean) -> Unit = {},
     onFixtureName: (String) -> Unit = {},
     onCheck: () -> Unit = {},
-    onSkipCheck: () -> Unit = {}
+    onSkipCheck: () -> Unit = {},
+    onTarget: (SpeakerTarget) -> Unit = {}
 ) {
     val headphone = output == CalibrationOutput.HEADPHONE
     var fixtureConfirmed by remember { mutableStateOf(false) }
@@ -155,7 +158,7 @@ fun CarCalibrationScreen(
                 }
                 is CalibrationWizard.Step.Position -> Position(step, headphone)
                 CalibrationWizard.Step.Fitting -> Working("Working out the correction")
-                is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name, headphone) { name = it }
+                is CalibrationWizard.Step.Result -> Result(step.fit, unprocessedMic, name, headphone, step.target, onTarget) { name = it }
                 is CalibrationWizard.Step.Verifying -> Verifying(step, headphone)
                 is CalibrationWizard.Step.Done -> Done(step, headphone)
             }
@@ -359,9 +362,24 @@ private fun Countdown() {
 }
 
 @Composable
-private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headphone: Boolean = false, onName: (String) -> Unit) {
+private fun Result(fit: FitResult, unprocessedMic: Boolean, name: String, headphone: Boolean = false,
+                   target: SpeakerTarget? = null, onTarget: (SpeakerTarget) -> Unit = {}, onName: (String) -> Unit) {
     Title(if (headphone) "Your headphones, corrected" else "Your speaker, corrected")
     Body("${fit.bands.size} EQ bands correct ${if (headphone) "the fixture response" else "the speaker"} from %.0f Hz to %.0f kHz.".format(fit.fromHz, fit.toHz / 1_000))
+    if (target != null) {
+        Spacer(Modifier.height(16.dp))
+        Heading("Aim for")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SpeakerTarget.entries.forEach { choice ->
+                FilterChip(selected = target == choice, onClick = { onTarget(choice) }, label = { Text(choice.label) })
+            }
+        }
+        Small(when (target) {
+            SpeakerTarget.CAR -> "More bass and softer treble, to carry over road noise."
+            SpeakerTarget.ROOM -> "The extra bass and softer treble most listeners preferred in a 2013 listening-room study."
+            SpeakerTarget.FLAT -> "An even response, with no added bass or treble."
+        })
+    }
     Spacer(Modifier.height(16.dp))
     ResponseGraph(fit)
     NoiseNotice(fit.excludedBandsHz)
