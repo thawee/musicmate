@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Per-side speaker tuning:** A speaker tuning plays the sweep through the left side and then the right at each spot, and gives each side its own correction. The louder side plays quieter to match, compared once each side's correction is on, and the side heard first waits up to 6 ms so both reach the centre seat together. Mono and multichannel tracks keep one combined correction.
+- **Tuning target:** The result offers Car, Room (2013 listening-room preference) and Flat. Changing it refits the same sweeps; older profiles load as Car.
+- **Measurement mic calibration file:** Import the REW-style file that comes with a UMIK, Dayton or similar mic; its response is left out of every sweep and the file is remembered for that mic. Headphone tuning does not use it.
+- **Songs from other players:** Show song from other players now also follows Neutron, USB Audio Player Pro and HiBy, and names the player.
+- **Emulator simulation (debug only):** A debug build can replace the mic with a simulated car to try the tuning screens on an emulator.
+
+### Changed
+- **Spot weighting:** The centre spot counts for half of a speaker tuning, and boosts shrink where the five spots disagree, because a dip that moves when you lean is a reflection EQ cannot fill.
+
+### Fixed
+- **Car and Bluetooth play controls:** Pressing play in the car or on a headset works again after Android stopped MusicMate's idle service.
+- **MateTune clicks:** Gapless track changes keep the EQ and limiter running, the limiter fades in and out, and the ReplayGain clip guard no longer pushes tracks into the limiter.
+- **Calibration measurements:** The mic's gain control, noise suppression and echo cancelling are off during sweeps, and the check compares against the centre take at the same spot.
+- **Calibration checklist:** Spacing above the microphone headings, a tick on the built-in mic that records by default, and kHz values that no longer break across lines.
+
 ### Experimental — held from release
 - **Lazy FLAC allocation:** Deferred audio workspace creation remains excluded from 3.23.0 because prior phone latency/memory results were mixed. Source snapshots and measurements are preserved in PERFORMANCE.md section 14.
 - **Request parser/copy experiment:** The combined framing-validation and copy-reduction change remains excluded from 3.23.0 after higher phone seek maxima. The existing release parser is retained; see PERFORMANCE.md section 13.
